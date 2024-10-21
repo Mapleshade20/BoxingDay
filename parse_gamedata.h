@@ -1,4 +1,4 @@
-#include "src/toml.hpp"
+#include "include/toml.hpp"
 #include <utility>
 
 struct GameData {
