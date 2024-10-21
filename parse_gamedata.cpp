@@ -5,6 +5,9 @@
 std::pair<GameData, bool> ParseGameData(std::string path) {
   GameData game_data;
   toml::value tbl;
+  std::fill(std::begin(game_data.outbox), std::end(game_data.outbox), 0);
+  std::fill(std::begin(game_data.inbox), std::end(game_data.inbox), 0);
+
   try {
     tbl = toml::parse(path);
   } catch (const std::exception &err) {
