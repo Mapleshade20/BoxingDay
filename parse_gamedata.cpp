@@ -16,9 +16,9 @@ std::pair<GameData, bool> ParseGameData(std::string path) {
 
   try {
     game_data.level = tbl.at("level").as_integer();
-    if (game_data.level < 1 || game_data.level > 60) {
-      throw std::runtime_error("Invalid level number.");
-    }
+    // if (game_data.level < 1 || game_data.level > 60) {
+    // throw std::runtime_error("Invalid level number.");
+    // }
     game_data.title = tbl.at("title").as_string();
     game_data.desc = tbl.at("desc").as_string();
 
@@ -38,6 +38,8 @@ std::pair<GameData, bool> ParseGameData(std::string path) {
       game_data.available_instructions[i] = instructions_array[i].as_string();
     }
 
+    game_data.outbox_size = tbl.at("game").at("outbox_size").as_integer();
+    game_data.inbox_size = tbl.at("game").at("inbox_size").as_integer();
     game_data.available_tiles =
         tbl.at("game").at("available_tiles").as_integer();
 
