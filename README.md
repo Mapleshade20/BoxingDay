@@ -18,7 +18,7 @@ The project will have 3 major releases.
 
 ### Data Files
 
-`game data` is built-in for the first four levels, and open to customization for other levels. It consists of a inbox number sequence, a desired outbox number sequence, level name, level number, level description, available instructions, and available tile amount.
+`game data` is built-in for the first four levels, and open to customization for other levels. It consists of a inbox number sequence, a desired outbox number sequence, level title, level number, level description, available instructions, and available tile amount.
 
 `player data` is the steps and instructions used when a level finishes. It's recorded and displayed in the menu (display to be done in Beta).
 
