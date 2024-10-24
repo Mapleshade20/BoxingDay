@@ -1,4 +1,4 @@
-#include "parse_gamedata.h"
+#include "../parse_gamedata.h"
 #include <iostream>
 
 void PrintGameData(const GameData &game_data) {
