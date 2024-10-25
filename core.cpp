@@ -5,8 +5,7 @@
 
 using namespace std;
 
-constexpr int MAX_TILES = 16;
-constexpr int MAX_INSTRUCTIONS = 256;
+constexpr int MAX_INSTRUCTIONS = 128;
 constexpr int MAX_INBOX = 256;
 constexpr int MAX_OUTBOX = 256;
 
@@ -98,28 +97,22 @@ int main() {
   int cursor = 0; // 指令位置
   bool err_flag = false;
   int err_pos = 0;
-  Register reg = {0, 0, 0, true};                     // 机器人状态
-  int available_tiles = game_data[0].available_tiles; // 允许地砖数
-  Tile tiles[MAX_TILES];                              // 地砖状态
-  for (int i = 0; i < MAX_TILES; i++) {
-    tiles[i].value = 0;
-    tiles[i].is_empty = true;
-  }
+  Register reg = {0, 0, 0, true}; // 机器人状态
+  int available_tiles = game_data[0].available_tiles;
+  vector<Tile> tiles(available_tiles + 1);
   string valid_names[8];
   for (int i = 0; i < 8; i++)
     valid_names[i] = game_data[0].available_instructions[i];
 
-  int inbox[MAX_INBOX];
-  int inbox_cursor = 0;                     // inbox指针
-  int inbox_size = game_data[0].inbox_size; // inbox总量
+  vector<int> inbox(game_data[0].inbox_size);
+  int inbox_cursor = 0; // inbox指针
   for (int i = 0; i < MAX_INBOX; i++) {
     inbox[i] = game_data[0].inbox[i];
   }
 
-  vector<int> outbox_buffer; // 用户实际outbox
+  vector<int> outbox_buffer; // 玩家实际outbox
 
-  int outbox_size = game_data[0].outbox_size;
-  int outbox_expected[MAX_OUTBOX]; // 期望outbox
+  vector<int> outbox_expected(game_data[0].outbox_size);
   for (int i = 0; i < MAX_OUTBOX; i++) {
     outbox_expected[i] = game_data[0].outbox[i];
   }
@@ -127,8 +120,8 @@ int main() {
   // Main loop
   while (cursor < program.size()) {
 
-    cout << "DEBUG: checking program[" << cursor
-         << "].name: " << program[cursor].name << endl;
+    // cout << "DEBUG: checking program[" << cursor
+    // << "].name: " << program[cursor].name << endl;
 
     if (program[cursor].name == "end") {
       break;
@@ -149,7 +142,7 @@ int main() {
 
     } else if (program[cursor].name == "inbox") {
 
-      if (inbox_cursor == inbox_size)
+      if (inbox_cursor == inbox.size())
         break;
       reg.dest_tile = -1;
       // animation
@@ -257,8 +250,8 @@ int main() {
     cout << "Error on instruction " << err_pos + 1 << endl;
     return 0;
   }
-  if (outbox_buffer.size() == outbox_size) {
-    for (int i = 0; i < outbox_size; i++) {
+  if (outbox_buffer.size() == outbox_expected.size()) {
+    for (int i = 0; i < outbox_expected.size(); i++) {
       if (outbox_buffer[i] != outbox_expected[i]) {
         success = false;
         break;
