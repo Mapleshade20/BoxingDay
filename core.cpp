@@ -5,19 +5,24 @@
 
 using namespace std;
 
+constexpr int MAX_TILES = 16;
+constexpr int MAX_INSTRUCTIONS = 256;
+constexpr int MAX_INBOX = 256;
+constexpr int MAX_OUTBOX = 256;
+
 struct Instruction {
   std::string name; // 指令类型
   int param;        // 操作位置
-  bool is_box;      // 判断是否需要读取param
+  // bool is_box;      // 判断是否需要读取param
 };
 struct GameData {
   int level;
   std::string title;
   std::string desc;
   int outbox_size;
-  int outbox[256];
+  int outbox[MAX_OUTBOX];
   int inbox_size;
-  int inbox[256];
+  int inbox[MAX_INBOX];
   std::string available_instructions[8];
   int available_tiles;
 };
@@ -26,7 +31,6 @@ struct GameData {
  * struct Register{CurrentTile, DestTile, Hand, IsEmpty},
  * array[Tile{Value, IsEmpty}],
  * array InQueue, array OutQueue, int Cursor
- * 2. Read an instruction, name -> change DestTile
  */
 
 struct Register {
@@ -41,6 +45,7 @@ struct Tile {
   bool is_empty;
 };
 
+// TODO: Gamedata should be passed in as a parameter from parser module
 const GameData game_data[3] = {
     {1, // level 1
      "One By One",
@@ -74,20 +79,20 @@ const GameData game_data[3] = {
       "jumpifzero"},
      3}};
 
+// TODO: Make the main function a standalone "core" function
+// So it should accept `program` and `gamedata` structs as parameters
+// And return the final results to the UI handler
+
 int main() {
 
-  // Instruction input
-  Instruction *program = new Instruction[256];
-  for (int i = 0; i < 256; i++) {
-    program[i].name = "";
-    program[i].param = 0;
-    program[i].is_box = true;
-  }
+  // TODO: Change `program` initialization -> user input
+
+  std::vector<Instruction> program(MAX_INSTRUCTIONS);
   program[0].name = "inbox";
   program[1].name = "outbox";
   program[2].name = "inbox";
   program[3].name = "outbox";
-  program[4].name = "end";
+  // program[4].name = "end";
 
   // Initialize game variables
   int cursor = 0; // 指令位置
@@ -95,8 +100,8 @@ int main() {
   int err_pos = 0;
   Register reg = {0, 0, 0, true};                     // 机器人状态
   int available_tiles = game_data[0].available_tiles; // 允许地砖数
-  Tile tiles[16];                                     // 地砖状态
-  for (int i = 0; i < 16; i++) {
+  Tile tiles[MAX_TILES];                              // 地砖状态
+  for (int i = 0; i < MAX_TILES; i++) {
     tiles[i].value = 0;
     tiles[i].is_empty = true;
   }
@@ -104,23 +109,26 @@ int main() {
   for (int i = 0; i < 8; i++)
     valid_names[i] = game_data[0].available_instructions[i];
 
-  int inbox[256];
+  int inbox[MAX_INBOX];
   int inbox_cursor = 0;                     // inbox指针
   int inbox_size = game_data[0].inbox_size; // inbox总量
-  for (int i = 0; i < 256; i++) {
+  for (int i = 0; i < MAX_INBOX; i++) {
     inbox[i] = game_data[0].inbox[i];
   }
 
   vector<int> outbox_buffer; // 用户实际outbox
 
   int outbox_size = game_data[0].outbox_size;
-  int outbox_expected[256]; // 期望outbox
-  for (int i = 0; i < 256; i++) {
+  int outbox_expected[MAX_OUTBOX]; // 期望outbox
+  for (int i = 0; i < MAX_OUTBOX; i++) {
     outbox_expected[i] = game_data[0].outbox[i];
   }
 
   // Main loop
-  while (true) {
+  while (cursor < program.size()) {
+
+    cout << "DEBUG: checking program[" << cursor
+         << "].name: " << program[cursor].name << endl;
 
     if (program[cursor].name == "end") {
       break;
@@ -133,10 +141,12 @@ int main() {
         break;
       }
     }
+
     if (!valid_flag) {
       err_flag = true;
       err_pos = cursor;
       break;
+
     } else if (program[cursor].name == "inbox") {
 
       if (inbox_cursor == inbox_size)
