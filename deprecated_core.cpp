@@ -26,12 +26,6 @@ struct GameData {
   int available_tiles;
 };
 
-/*
- * struct Register{CurrentTile, DestTile, Hand, IsEmpty},
- * array[Tile{Value, IsEmpty}],
- * array InQueue, array OutQueue, int Cursor
- */
-
 struct Register {
   int current_tile;
   int dest_tile;
