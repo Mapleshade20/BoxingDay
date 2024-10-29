@@ -15,13 +15,49 @@ public:
   std::string description;
   std::vector<int> expected_outbox;
   std::vector<int> initial_inbox;
-  std::vector<std::string> available_instructions;
+  std::vector<InstructionType> available_instructions;
   int available_tiles;
 
   static LevelData loadLevel(int level_number);
   static LevelData previewLevel(int level_number);
 };
-// TODO: 1. leveldata.cpp static loadLevel()
+
+// leveldata.cpp
+LevelData LevelData::loadLevel(int level_number) {
+  LevelData level_data;
+  switch (level_number) {
+  case 1:
+    level_data.initial_inbox = {1, 2};
+    level_data.expected_outbox = {1, 2};
+    level_data.available_tiles = 0;
+    level_data.available_instructions = {InstructionType::INBOX,
+                                         InstructionType::OUTBOX};
+    break;
+  case 2:
+    level_data.initial_inbox = {3, 9, 5, 1, -2, -2, 9, -9};
+    level_data.expected_outbox = {-6, 6, 4, -4, 0, 0, 18, -18};
+    level_data.available_tiles = 3;
+    level_data.available_instructions = {
+        InstructionType::INBOX,    InstructionType::OUTBOX,
+        InstructionType::ADD,      InstructionType::SUB,
+        InstructionType::JUMP,     InstructionType::COPYTO,
+        InstructionType::COPYFROM, InstructionType::JUMPIFZERO};
+    break;
+  case 3:
+    level_data.initial_inbox = {6, 2, 7, 7, -9, 3, -3, -3};
+    level_data.expected_outbox = {7, -3};
+    level_data.available_tiles = 3;
+    level_data.available_instructions = {
+        InstructionType::INBOX,    InstructionType::OUTBOX,
+        InstructionType::ADD,      InstructionType::SUB,
+        InstructionType::JUMP,     InstructionType::COPYTO,
+        InstructionType::COPYFROM, InstructionType::JUMPIFZERO};
+    break;
+  default:
+    throw ExecutionError::LEVEL_NOT_FOUND;
+  }
+  return level_data;
+}
 
 /*
  * gamestate.h - Game state management
@@ -142,21 +178,26 @@ class GameEngine {
 private:
   GameState state;
   Program program;
-  LevelData &level_data;
+  const LevelData &level_data;
   InstructionExecutor executor;
 
 public:
   GameEngine(const LevelData &level);
   void loadProgram(const Program &new_program);
-
+  const GameState &getState() const;
   bool executeNextInstruction(); // Returns false when program ends
   bool validateOutput() const;
-  const GameState &getState() const;
 };
 
 // engine.cpp
-// TODO: 4. engine.cpp loadProgram() validateOutput()
+GameEngine::GameEngine(const LevelData &data) : state(data), level_data(data) {}
+void GameEngine::loadProgram(const Program &new_program) {
+  program = new_program;
+}
 const GameState &GameEngine::getState() const { return state; }
+bool GameEngine::validateOutput() const {
+  return state.outbox_buffer == level_data.expected_outbox;
+}
 bool GameEngine::executeNextInstruction() {
   if (state.cursor >= program.size()) {
     return false;

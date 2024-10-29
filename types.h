@@ -14,6 +14,7 @@ enum class InstructionType {
 
 enum class ExecutionError {
   NONE,
+  LEVEL_NOT_FOUND,
   INVALID_INSTRUCTION,
   EMPTY_HAND,
   INVALID_JUMP,
