@@ -166,6 +166,9 @@ private:
   void executeAdd(GameState &state, int param);
   void executeSub(GameState &state, int param);
   void executeCopyTo(GameState &state, int param);
+  void executeCopyFrom(GameState &state, int param);
+  void executeJump(GameState &state, int param);
+  void executeJumpIfZero(GameState &state, int param);
 
 public:
   void executeInstruction(GameState &state, const Instruction &inst);
@@ -181,7 +184,24 @@ void InstructionExecutor::executeInstruction(GameState &state,
   case InstructionType::OUTBOX:
     executeOutbox(state);
     break;
-  // ... add other cases for different instruction types
+  case InstructionType::ADD:
+    executeAdd(state, inst.param);
+    break;
+  case InstructionType::SUB:
+    executeSub(state, inst.param);
+    break;
+  case InstructionType::COPYTO:
+    executeCopyTo(state, inst.param);
+    break;
+  case InstructionType::COPYFROM:
+    executeCopyFrom(state, inst.param);
+    break;
+  case InstructionType::JUMP:
+    executeJump(state, inst.param);
+    break;
+  case InstructionType::JUMPIFZERO:
+    executeJumpIfZero(state, inst.param);
+    break;
   default:
     throw ExecutionError::INVALID_INSTRUCTION;
   }
@@ -191,7 +211,6 @@ void InstructionExecutor::executeInbox(GameState &state) {
   if (state.inbox_cursor >= state.inbox.size()) {
     throw ExecutionError::EMPTY_INBOX;
   }
-
   state.reg.dest_tile = -1;
   state.reg.current_tile = state.reg.dest_tile;
   state.reg.is_empty = false;
