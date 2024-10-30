@@ -70,8 +70,8 @@ public:
   std::vector<Tile> tiles;
   std::vector<int> inbox;
   std::vector<int> outbox_buffer;
-  size_t inbox_cursor;
-  size_t cursor;
+  int inbox_cursor;
+  int cursor;
   int available_tiles;
 
   GameState(const LevelData &level);
@@ -79,7 +79,7 @@ public:
 
 // gamestate.cpp
 GameState::GameState(const LevelData &level) {
-  reg = {0, 0, 0, true};
+  reg = {0, 0, true};
   inbox = level.initial_inbox;
   outbox_buffer.clear();
   inbox_cursor = 0;
@@ -141,8 +141,8 @@ private:
 public:
   void addInstruction(const Instruction &inst);
   void clear();
-  const Instruction &at(size_t index) const;
-  size_t size() const;
+  const Instruction &at(int index) const;
+  int size() const;
 };
 
 // program.cpp
@@ -150,10 +150,10 @@ void Program::addInstruction(const Instruction &inst) {
   instructions.push_back(inst);
 }
 void Program::clear() { instructions.clear(); }
-const Instruction &Program::at(size_t index) const {
+const Instruction &Program::at(int index) const {
   return instructions.at(index);
 }
-size_t Program::size() const { return instructions.size(); }
+int Program::size() const { return instructions.size(); }
 
 /*
  * executor.h - Instruction execution logic
@@ -171,6 +171,8 @@ private:
   void executeJumpIfZero(GameState &state, int param);
 
 public:
+  int program_size;
+  InstructionExecutor() { program_size = 0; }
   void executeInstruction(GameState &state, const Instruction &inst);
 };
 
@@ -198,74 +200,95 @@ void InstructionExecutor::executeInstruction(GameState &state,
     break;
   case InstructionType::JUMP:
     executeJump(state, inst.param);
+    state.cursor--;
     break;
   case InstructionType::JUMPIFZERO:
     executeJumpIfZero(state, inst.param);
+    state.cursor--;
     break;
   default:
     throw ExecutionError::INVALID_INSTRUCTION;
   }
+
+  state.cursor++; // NOTE: UI: use `cursor` not when executing but after it!
 }
 
 void InstructionExecutor::executeInbox(GameState &state) {
-  if (state.inbox_cursor >= state.inbox.size()) {
+  if (state.inbox_cursor >= state.inbox.size())
     throw ExecutionError::EMPTY_INBOX;
-  }
-  state.reg.dest_tile = -1;
-  state.reg.current_tile = state.reg.dest_tile;
+
+  state.reg.current_tile = -1;
   state.reg.is_empty = false;
   state.reg.hand = state.inbox[state.inbox_cursor++];
 }
-// TODO: 3. implement other execute methods
+
 void InstructionExecutor::executeOutbox(GameState &state) {
   if (state.reg.is_empty == true) {
     throw ExecutionError::EMPTY_HAND;
   }
-  state.reg.dest_tile = -2;
-  state.reg.current_tile = state.reg.dest_tile;
+  state.reg.current_tile = -2;
   state.reg.is_empty = true;
   state.outbox_buffer.push_back(state.reg.hand);
 }
+
 void InstructionExecutor::executeAdd(GameState &state, int param) {
-  if (state.reg.is_empty == true) {
+  if (state.reg.is_empty == true)
     throw ExecutionError::EMPTY_HAND;
-  }
-  if (param >= state.available_tiles) {
+  if (param >= state.available_tiles)
     throw ExecutionError::OUT_OF_BOUNDS;
-  }
-  if (state.tiles[param].is_empty) {
+  if (state.tiles[param].is_empty)
     throw ExecutionError::EMPTY_TILE;
-  }
-  state.reg.dest_tile = param;
-  state.reg.current_tile = state.reg.dest_tile;
+
+  state.reg.current_tile = param;
   state.reg.hand += state.tiles[param].value;
 }
+
 void InstructionExecutor::executeSub(GameState &state, int param) {
-  if (state.reg.is_empty == true) {
+  if (state.reg.is_empty == true)
     throw ExecutionError::EMPTY_HAND;
-  }
-  if (param >= state.available_tiles) {
+  if (param >= state.available_tiles)
     throw ExecutionError::OUT_OF_BOUNDS;
-  }
-  if (state.tiles[param].is_empty) {
+  if (state.tiles[param].is_empty)
     throw ExecutionError::EMPTY_TILE;
-  }
-  state.reg.dest_tile = param;
-  state.reg.current_tile = state.reg.dest_tile;
+
+  state.reg.current_tile = param;
   state.reg.hand -= state.tiles[param].value;
 }
+
 void InstructionExecutor::executeCopyTo(GameState &state, int param) {
-  if (state.reg.is_empty == true) {
+  if (state.reg.is_empty == true)
     throw ExecutionError::EMPTY_HAND;
-  }
-  if (param >= state.available_tiles) {
+  if (param >= state.available_tiles)
     throw ExecutionError::OUT_OF_BOUNDS;
-  }
-  state.reg.dest_tile = param;
-  state.reg.current_tile = state.reg.dest_tile;
+
+  state.reg.current_tile = param;
   state.tiles[param].is_empty = false;
   state.tiles[param].value = state.reg.hand;
 }
+
+void InstructionExecutor::executeCopyFrom(GameState &state, int param) {
+  if (param >= state.available_tiles)
+    throw ExecutionError::OUT_OF_BOUNDS;
+  if (state.tiles[param].is_empty)
+    throw ExecutionError::EMPTY_TILE;
+
+  state.reg.current_tile = param;
+  state.reg.is_empty = false;
+  state.reg.hand = state.tiles[param].value;
+}
+
+void InstructionExecutor::executeJump(GameState &state, int param) {
+  if (param >= program_size)
+    throw ExecutionError::INVALID_JUMP;
+
+  state.cursor = param;
+}
+
+void InstructionExecutor::executeJumpIfZero(GameState &state, int param) {
+  if (state.reg.hand == 0)
+    executeJump(state, param);
+}
+
 /*
  * engine.h - Core game logic, destroyed after each level ends
  */
@@ -289,6 +312,7 @@ public:
 GameEngine::GameEngine(const LevelData &data) : state(data), level_data(data) {}
 void GameEngine::loadProgram(const Program &new_program) {
   program = new_program;
+  executor.program_size = program.size();
 }
 const GameState &GameEngine::getState() const { return state; }
 bool GameEngine::validateOutput() const {
@@ -312,19 +336,23 @@ bool GameEngine::executeNextInstruction() {
 }
 
 /*
- * UI.h - User interface
+ * UI.h - User interface - Further development needed
  */
 
 class GameUI {
 private:
+  GameEngine *engine; // Make GameEngine a pointer member
   int delay_ms;
-  void displayState(const GameState &state);
+
+  // void displayState(const GameState &state);
   void displayError(ExecutionError error, int err_pos);
   void displayExecutionResult(bool success);
   Program readProgramFromUser();
 
 public:
-  GameUI() : delay_ms(0) {} // NOTE: Change to a non-zero value after OJ
+  GameUI() : engine(nullptr), delay_ms(0) {}
+  ~GameUI() { delete engine; }
+
   void setDelay(int ms);
   int menu(); // choose level -> return level number
   void run();
@@ -332,29 +360,28 @@ public:
 
 // UI.cpp
 void GameUI::setDelay(int ms) { delay_ms = ms; }
-
 Program GameUI::readProgramFromUser() {
-  int time;
-  std::cin >> time;
-  Program p;
-  for (int t = 0; t < time; t++) {
+  int n_ins;
+  std::cin >> n_ins;
+  Program program;
+  for (int t = 0; t < n_ins; t++) {
     std::string s_input;
     std::getline(std::cin, s_input);
-    std::stringstream ss(s_input);
+    std::stringstream stream(s_input);
     std::vector<std::string> str;
-    int param = 0, cnt = 0;
+    int param = 0, n_word = 0;
     std::string tmp;
-    std::getline(ss, tmp, ' ');
+    std::getline(stream, tmp, ' ');
     while (tmp != "") {
       str.push_back(tmp);
-      std::getline(ss, tmp, ' ');
-      cnt++;
+      std::getline(stream, tmp, ' ');
+      n_word++;
     }
-    if (cnt < 1 || cnt > 2) {
+    if (n_word <= 0 || n_word >= 3) {
       str[0] = "error";
       continue;
     }
-    if (cnt == 1)
+    if (n_word == 1)
       param = -1;
     else {
       int len = str[1].length();
@@ -369,9 +396,9 @@ Program GameUI::readProgramFromUser() {
       }
     }
     Instruction i = Instruction::fromString(str[0], param);
-    p.addInstruction(i);
+    program.addInstruction(i);
   }
-  return p;
+  return program;
 }
 /* errortype:
 1) find more than 2 words
@@ -405,38 +432,35 @@ void GameUI::run() {
     if (level == -1) { // Exit signal
       break;
     }
+
+    // Create new engine for each level
+    delete engine;
     const LevelData level_data = LevelData::loadLevel(level);
-    GameEngine engine(level_data);
+    engine = new GameEngine(level_data);
+
     Program program = readProgramFromUser();
-    engine.loadProgram(program);
+    engine->loadProgram(program);
 
     while (true) {
-      // Execute one instruction
       try {
-        bool continues = engine.executeNextInstruction();
+        bool continues = engine->executeNextInstruction();
 
-        // Display the current state after each instruction
-        displayState(engine.getState());
-
-        // Control speed of execution
+        // displayState(engine->getState());
         std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
 
         if (!continues) {
           break;
         }
       } catch (ExecutionError error) {
-        displayError(error, engine.getState().cursor);
+        displayError(error, engine->getState().cursor);
         return;
       }
     }
 
-    // Show final result
-    bool result = engine.validateOutput();
+    bool result = engine->validateOutput();
     displayExecutionResult(result);
 
     break; // NOTE: Remove this line to play all levels after OJ
-
-    // SAVE FEATURE GOES HERE!
   }
 }
 

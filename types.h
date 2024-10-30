@@ -18,6 +18,7 @@ enum class ExecutionError {
   LEVEL_NOT_FOUND,
   INVALID_INSTRUCTION,
   EMPTY_HAND,
+  EMPTY_TILE,
   INVALID_JUMP,
   OUT_OF_BOUNDS,
   EMPTY_INBOX // only happens in debug stage
@@ -25,7 +26,6 @@ enum class ExecutionError {
 
 struct Register {
   int current_tile;
-  int dest_tile;
   int hand;
   bool is_empty;
 };
