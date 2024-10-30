@@ -363,48 +363,45 @@ void GameUI::setDelay(int ms) { delay_ms = ms; }
 Program GameUI::readProgramFromUser() {
   int n_ins;
   std::cin >> n_ins;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(),
+                  '\n'); // Clear newline after reading n_ins
   Program program;
+
   for (int t = 0; t < n_ins; t++) {
     std::string s_input;
     std::getline(std::cin, s_input);
     std::stringstream stream(s_input);
-    std::vector<std::string> str;
-    int param = 0, n_word = 0;
-    std::string tmp;
-    std::getline(stream, tmp, ' ');
-    while (tmp != "") {
-      str.push_back(tmp);
-      std::getline(stream, tmp, ' ');
-      n_word++;
-    }
-    if (n_word <= 0 || n_word >= 3) {
-      str[0] = "error";
+    std::string command;
+    int param = -1;
+
+    stream >> command;
+    if (command.empty()) {
+      command = "error";
       continue;
     }
-    if (n_word == 1)
-      param = -1;
-    else {
-      int len = str[1].length();
-      for (int j = 0; j < len; j++) {
-        param *= 10;
-        if (int(str[1][j]) >= 48 && int(str[1][j]) <= 57) {
-          param += int(str[1][j]) - 48;
-        } else {
-          str[0] = "error";
-          break;
+
+    if (!stream.eof()) {
+      std::string param_str;
+      stream >> param_str;
+
+      if (!param_str.empty() && stream.eof()) {
+        try {
+          param = std::stoi(param_str);
+        } catch (const std::invalid_argument &) {
+          command = "error";
+        } catch (const std::out_of_range &) {
+          command = "error";
         }
+      } else {
+        command = "error"; // More than 2 words or invalid param
       }
     }
-    Instruction i = Instruction::fromString(str[0], param);
+
+    Instruction i = Instruction::fromString(command, param);
     program.addInstruction(i);
   }
   return program;
 }
-/* errortype:
-1) find more than 2 words
-2) invalid param
-*an empty param will return -1
-*/
 
 int GameUI::menu() {
   // NOTE: preview & select level UI (for OJ this is just cin a number)
