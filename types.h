@@ -9,7 +9,8 @@ enum class InstructionType {
   COPYFROM,
   JUMP,
   JUMPIFZERO,
-  END
+  END,
+  ERROR
 };
 
 enum class ExecutionError {

@@ -1,5 +1,6 @@
 #include "types.h"
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -97,9 +98,37 @@ public:
   InstructionType type;
   int param;
 
-  static Instruction fromString(const std::string &name, int param = 0);
+  static Instruction fromString(const std::string &name, int param);
 };
-// TODO: 2. instruction.cpp fromString()
+Instruction Instruction::fromString(const std::string &name, int param) {
+  Instruction ans;
+  if (name == "error") {
+    ans.type = InstructionType::ERROR;
+    ans.param = -2;
+    return ans;
+  }
+  if (name == "inbox" && param == -1)
+    ans.type = InstructionType::INBOX;
+  else if (name == "outbox" && param == -1)
+    ans.type = InstructionType::OUTBOX;
+  else if (name == "add" && param != -1)
+    ans.type = InstructionType::ADD;
+  else if (name == "sub" && param != -1)
+    ans.type = InstructionType::SUB;
+  else if (name == "copyto" && param != -1)
+    ans.type = InstructionType::COPYTO;
+  else if (name == "copyfrom" && param != -1)
+    ans.type = InstructionType::COPYFROM;
+  else if (name == "jump" && param != -1)
+    ans.type = InstructionType::JUMP;
+  else if (name == "jumpifzero" && param != -1)
+    ans.type = InstructionType::JUMPIFZERO;
+  else {
+    ans.type = InstructionType::ERROR;
+    ans.param = -2;
+  }
+  return ans;
+}
 
 /*
  * program.h - Program management
@@ -237,8 +266,51 @@ public:
 // UI.cpp
 void GameUI::setDelay(int ms) { delay_ms = ms; }
 
-Program GameUI::readProgramFromUser() {}
-// TODO: 5. implement readProgramFromUser()
+Program GameUI::readProgramFromUser() {
+  int time;
+  std::cin >> time;
+  Program p;
+  for (int t = 0; t < time; t++) {
+    std::string s_input;
+    std::getline(std::cin, s_input);
+    std::stringstream ss(s_input);
+    std::vector<std::string> str;
+    int param = 0, cnt = 0;
+    std::string tmp;
+    std::getline(ss, tmp, ' ');
+    while (tmp != "") {
+      str.push_back(tmp);
+      std::getline(ss, tmp, ' ');
+      cnt++;
+    }
+    if (cnt < 1 || cnt > 2) {
+      str[0] = "error";
+      continue;
+    }
+    if (cnt == 1)
+      param = -1;
+    else {
+      int len = str[1].length();
+      for (int j = 0; j < len; j++) {
+        param *= 10;
+        if (int(str[1][j]) >= 48 && int(str[1][j]) <= 57) {
+          param += int(str[1][j]) - 48;
+        } else {
+          str[0] = "error";
+          break;
+        }
+      }
+    }
+    Instruction i = Instruction::fromString(str[0], param);
+    p.addInstruction(i);
+  }
+  return p;
+}
+/* errortype:
+1) find more than 2 words
+2) invalid param
+*an empty param will return -1
+*/
 
 int GameUI::menu() {
   // NOTE: preview & select level UI (for OJ this is just cin a number)
