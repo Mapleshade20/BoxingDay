@@ -217,7 +217,55 @@ void InstructionExecutor::executeInbox(GameState &state) {
   state.reg.hand = state.inbox[state.inbox_cursor++];
 }
 // TODO: 3. implement other execute methods
-
+void InstructionExecutor::executeOutbox(GameState &state) {
+  if (state.reg.is_empty == true) {
+    throw ExecutionError::EMPTY_HAND;
+  }
+  state.reg.dest_tile = -2;
+  state.reg.current_tile = state.reg.dest_tile;
+  state.reg.is_empty = true;
+  state.outbox_buffer.push_back(state.reg.hand);
+}
+void InstructionExecutor::executeAdd(GameState &state, int param) {
+  if (state.reg.is_empty == true) {
+    throw ExecutionError::EMPTY_HAND;
+  }
+  if (param >= state.available_tiles) {
+    throw ExecutionError::OUT_OF_BOUNDS;
+  }
+  if (state.tiles[param].is_empty) {
+    throw ExecutionError::EMPTY_TILE;
+  }
+  state.reg.dest_tile = param;
+  state.reg.current_tile = state.reg.dest_tile;
+  state.reg.hand += state.tiles[param].value;
+}
+void InstructionExecutor::executeSub(GameState &state, int param) {
+  if (state.reg.is_empty == true) {
+    throw ExecutionError::EMPTY_HAND;
+  }
+  if (param >= state.available_tiles) {
+    throw ExecutionError::OUT_OF_BOUNDS;
+  }
+  if (state.tiles[param].is_empty) {
+    throw ExecutionError::EMPTY_TILE;
+  }
+  state.reg.dest_tile = param;
+  state.reg.current_tile = state.reg.dest_tile;
+  state.reg.hand -= state.tiles[param].value;
+}
+void InstructionExecutor::executeCopyTo(GameState &state, int param) {
+  if (state.reg.is_empty == true) {
+    throw ExecutionError::EMPTY_HAND;
+  }
+  if (param >= state.available_tiles) {
+    throw ExecutionError::OUT_OF_BOUNDS;
+  }
+  state.reg.dest_tile = param;
+  state.reg.current_tile = state.reg.dest_tile;
+  state.tiles[param].is_empty = false;
+  state.tiles[param].value = state.reg.hand;
+}
 /*
  * engine.h - Core game logic, destroyed after each level ends
  */
