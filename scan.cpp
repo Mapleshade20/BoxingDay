@@ -1,5 +1,6 @@
 #include "scan.h"
 using namespace std;
+
 int strtoint(string a) {
   int len = a.length(), ans = 0;
   for (int i = 0; i < len; i++) {
@@ -13,6 +14,7 @@ int strtoint(string a) {
   }
   return ans;
 }
+
 Instruction *scanins() {
   Instruction *program = new Instruction[256];
   for (int i = 0; i < 256; i++) {
