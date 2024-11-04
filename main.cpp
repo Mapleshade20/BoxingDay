@@ -1,9 +1,46 @@
-#include "types.h"
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
+
+// types.h - Basic type definitions
+
+enum class InstructionType {
+  INBOX,
+  OUTBOX,
+  ADD,
+  SUB,
+  COPYTO,
+  COPYFROM,
+  JUMP,
+  JUMPIFZERO,
+  END,
+  ERROR
+};
+
+enum class ExecutionError {
+  NONE,
+  LEVEL_NOT_FOUND,
+  INVALID_INSTRUCTION,
+  EMPTY_HAND,
+  EMPTY_TILE,
+  INVALID_JUMP,
+  OUT_OF_BOUNDS,
+  EMPTY_INBOX // only happens in debug stage
+};
+
+struct Register {
+  int current_tile;
+  int hand;
+  bool is_empty;
+};
+
+struct Tile {
+  int value;
+  bool is_empty;
+};
 
 /*
  * leveldata.h - Level configuration
@@ -107,6 +144,7 @@ Instruction Instruction::fromString(const std::string &name, int param) {
     ans.param = -2;
     return ans;
   }
+  ans.param = param;
   if (name == "inbox" && param == -1)
     ans.type = InstructionType::INBOX;
   else if (name == "outbox" && param == -1)
@@ -219,7 +257,8 @@ void InstructionExecutor::executeInbox(GameState &state) {
 
   state.reg.current_tile = -1;
   state.reg.is_empty = false;
-  state.reg.hand = state.inbox[state.inbox_cursor++];
+  state.reg.hand = state.inbox[state.inbox_cursor];
+  state.inbox_cursor++;
 }
 
 void InstructionExecutor::executeOutbox(GameState &state) {
@@ -278,15 +317,20 @@ void InstructionExecutor::executeCopyFrom(GameState &state, int param) {
 }
 
 void InstructionExecutor::executeJump(GameState &state, int param) {
-  if (param >= program_size)
+  if (param <= 0 || param >= program_size + 1 || param == state.cursor + 1)
     throw ExecutionError::INVALID_JUMP;
 
-  state.cursor = param;
+  state.cursor = param - 1;
 }
 
 void InstructionExecutor::executeJumpIfZero(GameState &state, int param) {
+  if (param <= 0 || param >= program_size + 1 || param == state.cursor + 1)
+    throw ExecutionError::INVALID_JUMP;
+  if (state.reg.is_empty)
+    throw ExecutionError::EMPTY_HAND;
+
   if (state.reg.hand == 0)
-    executeJump(state, param);
+    state.cursor = param - 1;
 }
 
 /*
@@ -297,12 +341,12 @@ class GameEngine {
 private:
   GameState state;
   Program program;
-  const LevelData &level_data;
   InstructionExecutor executor;
 
 public:
   GameEngine(const LevelData &level);
   void loadProgram(const Program &new_program);
+  const LevelData &level_data;
   const GameState &getState() const;
   bool executeNextInstruction(); // Returns false when program ends
   bool validateOutput() const;
@@ -323,11 +367,10 @@ bool GameEngine::executeNextInstruction() {
     return false;
   }
 
-  const Instruction &current = program.at(state.cursor);
+  const Instruction current = program.at(state.cursor);
 
-  if (current.type == InstructionType::END ||
-      (current.type == InstructionType::INBOX &&
-       state.inbox_cursor >= state.inbox.size())) {
+  if (current.type == InstructionType::INBOX &&
+      state.inbox_cursor >= state.inbox.size()) {
     return false;
   }
 
@@ -363,15 +406,13 @@ void GameUI::setDelay(int ms) { delay_ms = ms; }
 Program GameUI::readProgramFromUser() {
   int n_ins;
   std::cin >> n_ins;
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(),
-                  '\n'); // Clear newline after reading n_ins
+  std::cin.ignore(1000, '\n'); // Clear newline after reading n_ins
   Program program;
 
   for (int t = 0; t < n_ins; t++) {
-    std::string s_input;
+    std::string s_input, command;
     std::getline(std::cin, s_input);
     std::stringstream stream(s_input);
-    std::string command;
     int param = -1;
 
     stream >> command;
@@ -398,6 +439,11 @@ Program GameUI::readProgramFromUser() {
     }
 
     Instruction i = Instruction::fromString(command, param);
+    if (std::none_of(engine->level_data.available_instructions.begin(),
+                     engine->level_data.available_instructions.end(),
+                     [&i](InstructionType type) { return type == i.type; })) {
+      i.type = InstructionType::ERROR;
+    }
     program.addInstruction(i);
   }
   return program;
@@ -423,6 +469,22 @@ void GameUI::displayExecutionResult(bool success) {
   }
 }
 
+// // NOTE: Only for debugging!
+// void GameUI::displayState(const GameState &state) {
+//   std::cout << "[[Current State]]" << std::endl;
+//   std::cout << "Inbox Cursor: " << state.inbox_cursor << std::endl;
+//   std::cout << "Cursor: " << state.cursor << std::endl;
+//   std::cout << "Hand: "
+//             << (state.reg.is_empty ? "Empty" :
+//             std::to_string(state.reg.hand))
+//             << std::endl;
+//   std::cout << "Outbox Buffer: ";
+//   for (const auto &value : state.outbox_buffer) {
+//     std::cout << value << " ";
+//   }
+//   std::cout << std::endl;
+// }
+
 void GameUI::run() {
   while (true) {
     int level = menu();
@@ -443,6 +505,10 @@ void GameUI::run() {
         bool continues = engine->executeNextInstruction();
 
         // displayState(engine->getState());
+        // std::cout << "executeNextInstruction() returned: "
+        //           << (continues ? "true" : "false") << "\n"
+        //           << std::endl;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
 
         if (!continues) {
@@ -480,18 +546,3 @@ int main() {
 
   return 0;
 }
-
-/*
-
-Benefits of this structure:
-1. Clear separation of concerns
-2. Each class has a single responsibility
-3. Easy to test individual components
-4. Easy to modify or extend functionality
-5. Clear interfaces between components
-6. Better error handling
-7. Better state management
-8. Easy to add new features (save/load, different UIs, etc.)
-9. More maintainable and scalable
-
-*/
