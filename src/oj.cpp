@@ -5,8 +5,6 @@
 #include <thread>
 #include <vector>
 
-// types.h - Basic type definitions
-
 enum class InstructionType {
   INBOX,
   OUTBOX,
@@ -28,7 +26,6 @@ enum class ExecutionError {
   EMPTY_TILE,
   INVALID_JUMP,
   OUT_OF_BOUNDS,
-  EMPTY_INBOX // only happens in debug stage
 };
 
 struct Register {
@@ -137,6 +134,8 @@ public:
 
   static Instruction fromString(const std::string &name, int param);
 };
+
+// instruction.cpp
 Instruction Instruction::fromString(const std::string &name, int param) {
   Instruction ans;
   if (name == "error") {
@@ -180,7 +179,7 @@ public:
   void addInstruction(const Instruction &inst);
   void clear();
   const Instruction &at(int index) const;
-  int size() const;
+  const int size() const;
 };
 
 // program.cpp
@@ -191,7 +190,7 @@ void Program::clear() { instructions.clear(); }
 const Instruction &Program::at(int index) const {
   return instructions.at(index);
 }
-int Program::size() const { return instructions.size(); }
+const int Program::size() const { return instructions.size(); }
 
 /*
  * executor.h - Instruction execution logic
@@ -207,14 +206,17 @@ private:
   void executeCopyFrom(GameState &state, int param);
   void executeJump(GameState &state, int param);
   void executeJumpIfZero(GameState &state, int param);
+  bool is_successful_jump;
 
 public:
   int program_size;
-  InstructionExecutor() { program_size = 0; }
+  InstructionExecutor();
   void executeInstruction(GameState &state, const Instruction &inst);
 };
 
 // executor.cpp
+InstructionExecutor::InstructionExecutor()
+    : is_successful_jump(false), program_size(0) {}
 void InstructionExecutor::executeInstruction(GameState &state,
                                              const Instruction &inst) {
   switch (inst.type) {
@@ -238,23 +240,21 @@ void InstructionExecutor::executeInstruction(GameState &state,
     break;
   case InstructionType::JUMP:
     executeJump(state, inst.param);
-    state.cursor--;
     break;
   case InstructionType::JUMPIFZERO:
     executeJumpIfZero(state, inst.param);
-    state.cursor--;
     break;
   default:
     throw ExecutionError::INVALID_INSTRUCTION;
   }
 
-  state.cursor++; // NOTE: UI: use `cursor` not when executing but after it!
+  if (!is_successful_jump) {
+    state.cursor++; // NOTE: UI runs when `cursor` already points to next
+  }
+  is_successful_jump = false;
 }
 
 void InstructionExecutor::executeInbox(GameState &state) {
-  if (state.inbox_cursor >= state.inbox.size())
-    throw ExecutionError::EMPTY_INBOX;
-
   state.reg.current_tile = -1;
   state.reg.is_empty = false;
   state.reg.hand = state.inbox[state.inbox_cursor];
@@ -321,6 +321,7 @@ void InstructionExecutor::executeJump(GameState &state, int param) {
     throw ExecutionError::INVALID_JUMP;
 
   state.cursor = param - 1;
+  is_successful_jump = true;
 }
 
 void InstructionExecutor::executeJumpIfZero(GameState &state, int param) {
@@ -329,8 +330,10 @@ void InstructionExecutor::executeJumpIfZero(GameState &state, int param) {
   if (state.reg.is_empty)
     throw ExecutionError::EMPTY_HAND;
 
-  if (state.reg.hand == 0)
+  if (state.reg.hand == 0) {
     state.cursor = param - 1;
+    is_successful_jump = true;
+  }
 }
 
 /*
@@ -450,7 +453,7 @@ Program GameUI::readProgramFromUser() {
 }
 
 int GameUI::menu() {
-  // NOTE: preview & select level UI (for OJ this is just cin a number)
+  // NOTE: Need preview & select level UI
   int level = 1;
   std::cin >> level;
 
@@ -469,7 +472,7 @@ void GameUI::displayExecutionResult(bool success) {
   }
 }
 
-// // NOTE: Only for debugging!
+// INFO: Only for debugging!
 // void GameUI::displayState(const GameState &state) {
 //   std::cout << "[[Current State]]" << std::endl;
 //   std::cout << "Inbox Cursor: " << state.inbox_cursor << std::endl;
@@ -504,6 +507,7 @@ void GameUI::run() {
       try {
         bool continues = engine->executeNextInstruction();
 
+        // INFO: Only for debugging!
         // displayState(engine->getState());
         // std::cout << "executeNextInstruction() returned: "
         //           << (continues ? "true" : "false") << "\n"
