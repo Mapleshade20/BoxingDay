@@ -38,7 +38,7 @@ struct Tile {
 };
 
 class Instruction {
-public:
+ public:
   InstructionType type;
   int param;
 
@@ -46,12 +46,12 @@ public:
 };
 
 class Program {
-private:
+ private:
   std::vector<Instruction> instructions;
 
-public:
+ public:
   void addInstruction(const Instruction &inst);
   void clear();
   const Instruction &at(int index) const;
-  const int size() const;
+  int size() const;
 };

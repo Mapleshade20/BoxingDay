@@ -17,7 +17,7 @@ bool GameEngine::executeNextInstruction() {
   const Instruction current = program.at(state.cursor);
 
   if (current.type == InstructionType::INBOX &&
-      state.inbox_cursor >= state.inbox.size()) {
+      state.inbox_cursor >= int(state.inbox.size())) {
     return false;
   }
 

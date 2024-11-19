@@ -38,4 +38,4 @@ void Program::clear() { instructions.clear(); }
 const Instruction &Program::at(int index) const {
   return instructions.at(index);
 }
-const int Program::size() const { return instructions.size(); }
+int Program::size() const { return instructions.size(); }

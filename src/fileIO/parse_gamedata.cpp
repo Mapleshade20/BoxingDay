@@ -2,6 +2,8 @@
 
 #include "parse_gamedata.h"
 
+#include "../../include/toml.hpp"
+
 std::pair<GameData, bool> ParseGameData(std::string path) {
   GameData game_data;
   toml::value tbl;
