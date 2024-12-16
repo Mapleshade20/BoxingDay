@@ -1,6 +1,6 @@
-#include <chrono>
+#include <unistd.h>
+
 #include <iostream>
-#include <thread>
 
 #include "../src/ui/libtui.hpp"
 
@@ -14,7 +14,7 @@ const int HEIGHT = 10;
 char level[HEIGHT][WIDTH] = {
     {'#', '#', '#', '#', '#', '#', '#', '#', '#', '#',
      '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
-    {'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'E',
+    {'#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
      ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
     {'#', ' ', '#', '#', '#', '#', '#', '#', '#', ' ',
      '#', '#', '#', '#', '#', '#', ' ', ' ', ' ', '#'},
@@ -83,7 +83,6 @@ bool isCollision(int newX, int newY) {
 // Main game loop
 void gameLoop() {
   drawInitialLevel();
-  hideCursor();
 
   while (true) {
     if (kbhit()) {
@@ -119,17 +118,17 @@ void gameLoop() {
         updatePlayerPosition(oldX, oldY, newX, newY);
       }
     }
-
-    this_thread::sleep_for(chrono::milliseconds(100));
+    usleep(1000000 / 60);  // 60 FPS
   }
 }
 
 int main() {
   setNonBlockingInput();
+  hideCursor();
 
   cout << "Welcome to the Text-Based Game!" << endl;
   cout << "Controls: w (up), s (down), a (left), d (right), q (quit)" << endl;
-  this_thread::sleep_for(chrono::milliseconds(3000));
+  usleep(3000000);
 
   initScreenBuffer();
   gameLoop();
