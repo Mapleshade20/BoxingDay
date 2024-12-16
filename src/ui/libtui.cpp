@@ -8,10 +8,12 @@
 #include <cstdlib>
 #include <iostream>
 
-// Clear console screen
-void clearConsole() { system("clear"); }
+// Function to clear the console
+void clearConsole() {
+  system("clear");  // Use "cls" for Windows
+}
 
-// Set up terminal for game
+// Function to set terminal to non-blocking mode
 void setNonBlockingInput() {
   struct termios oldt, newt;
   tcgetattr(STDIN_FILENO, &oldt);           // Get current terminal settings
@@ -20,7 +22,7 @@ void setNonBlockingInput() {
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);  // Set new settings
 }
 
-// Restore terminal settings
+// Function to reset terminal settings
 void resetTerminal() {
   struct termios oldt;
   tcgetattr(STDIN_FILENO, &oldt);
@@ -28,7 +30,7 @@ void resetTerminal() {
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);  // Reset terminal settings
 }
 
-// Returns true if a key is being pressed
+// Function to check if a key has been pressed
 bool kbhit() {
   struct termios oldt, newt;
   tcgetattr(STDIN_FILENO, &oldt);
@@ -45,8 +47,8 @@ bool kbhit() {
   return bytesWaiting > 0;  // Return true if there are bytes waiting to read
 }
 
-// Move cursor to specific position (1-based!)
 void moveCursor(int x, int y) {
+  // Move cursor to specific position (1-based)
   std::cout << "\033[" << (y + 1) << ";" << (x + 1) << "H" << std::flush;
 }
 
