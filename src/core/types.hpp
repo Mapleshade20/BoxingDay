@@ -26,15 +26,21 @@ enum class ExecutionError {
   OUT_OF_BOUNDS,
 };
 
-struct Register {
+class Register {
+public:
   int current_tile;
   int hand;
   bool is_empty;
+  std::string getContent() const;
+  Register();
 };
 
-struct Tile {
+class Tile {
+public:
   int value;
   bool is_empty;
+  std::string getContent() const;
+  Tile();
 };
 
 class Instruction {

@@ -9,10 +9,11 @@ private:
   InstructionExecutor executor;
 
 public:
+  const LevelData &level_data;
+
   GameEngine(const LevelData &level);
   void loadProgram(const Program &new_program);
-  const LevelData &level_data;
   const GameState &getState() const;
-  bool executeNextInstruction(); // Returns false when program ends
+  bool executeNextInstruction();  // Returns false when program ends
   bool validateOutput() const;
 };

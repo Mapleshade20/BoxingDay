@@ -45,14 +45,24 @@ void Renderer::renderWord(int dx, int dy, std::string color, std::string word) {
 
 void Renderer::clearShape(int dx, int dy) {
   for (int i = 0; i < shape.size(); i++) {
-    moveCursor(coord.x, coord.y + i);
-    std::cout << space(shape[i].length()) << std::flush;
+    moveCursor(coord.x + dx, coord.y + i + dy);
+    std::cout << space(shape[i].length());
   }
+  std::cout << std::flush;
+}
+
+void Renderer::clearShapeAbsolute(int x, int y) {
+  for (int i = 0; i < shape.size(); i++) {
+    moveCursor(x, y + i);
+    std::cout << space(shape[i].length());
+  }
+  std::cout << std::flush;
 }
 
 void Renderer::clearArea(int dx, int dy, int width, int height) {
   for (int i = 0; i < height; i++) {
     moveCursor(coord.x + dx, coord.y + dy + i);
-    std::cout << space(width) << std::flush;
+    std::cout << space(width);
   }
+  std::cout << std::flush;
 }

@@ -47,7 +47,7 @@ void initScreenBuffer() {
 // Function to update a single position on screen
 void updatePosition(int x, int y, char newChar) {
   if (screenBuffer[y][x] != newChar) {
-    moveCursor(x, y);
+    moveCursor(x + 1, y + 1);
     cout << newChar << flush;
     screenBuffer[y][x] = newChar;
   }

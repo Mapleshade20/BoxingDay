@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <stdexcept>
 
 // Function to clear the console
 void clearConsole() {
@@ -48,8 +49,10 @@ bool kbhit() {
 }
 
 void moveCursor(int x, int y) {
-  // Move cursor to specific position (1-based)
-  std::cout << "\033[" << (y + 1) << ";" << (x + 1) << "H" << std::flush;
+  if (x <= 0 || y <= 0) {
+    throw std::invalid_argument("Invalid cursor position");
+  }
+  std::cout << "\033[" << y << ";" << x << "H" << std::flush;
 }
 
 void hideCursor() { std::cout << "\033[?25l" << std::flush; }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 
@@ -36,6 +38,9 @@ public:
 
   // Fill the shape area with spaces at a relative position
   void clearShape(int dx, int dy);
+
+  // Fill the shape area with spaces at an absolute position
+  void clearShapeAbsolute(int x, int y);
 
   // Fill a box area with spaces at a relative position
   void clearArea(int dx, int dy, int width, int height);

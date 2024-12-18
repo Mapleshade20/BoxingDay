@@ -1,5 +1,24 @@
 #include "types.hpp"
 
+std::string Register::getContent() const {
+  return (this->is_empty ? "" : std::to_string(this->hand));
+}
+
+Register::Register() {
+  this->current_tile = -1;
+  this->hand = 0;
+  this->is_empty = true;
+}
+
+std::string Tile::getContent() const {
+  return (this->is_empty ? "" : std::to_string(this->value));
+}
+
+Tile::Tile() {
+  this->value = 0;
+  this->is_empty = true;
+}
+
 Instruction Instruction::fromString(const std::string &name, int param) {
   Instruction ans;
   if (name == "error") {

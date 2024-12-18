@@ -1,0 +1,31 @@
+----
+| Level 3: Kill The Beast
+| 
+| You are in a large chamber, with passages to the north and south.
+| And there is a monster in the room!
+|
+|          -----    
+| /-----\ |     ||     |
+| |     |  -----
+| \-----/   -|-
+|           / \
+|        
+|                /-----\ /-----\ /-----\ /-----\ /-----\
+|                |     | |     |
+|                \-----/ \-----/
+|                  #0      #1     
+|                
+|                  #2      #3     
+|                /-----\ /-----\
+|                |     | |     |
+|                \-----/ \-----/
+|                
+|                 ----- 
+|                |     |
+|                 -----
+|                  -|-
+|                  / \
+|
+| Steps: 27 // TODO: add a step counter in GameEngine
+|
+----
