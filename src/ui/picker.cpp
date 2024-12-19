@@ -151,17 +151,21 @@ void PickerState::addCommand(bool above, const int max_ins) {
   int cur = cursor_positions[0];  // create a new param, then move tab(right)
   command_length++;
   if (above) {
-    instructions.insert(instructions.begin() + cur - 1,
-                        {InstructionType::ERROR, -1});
-    is_param_complete.insert(is_param_complete.begin() + cur - 1, false);
+    cur--;
   } else {
-    instructions.insert(instructions.begin() + cur,
-                        {InstructionType::ERROR, -1});
-    is_param_complete.insert(is_param_complete.begin() + cur, false);
     cursor_positions[0]++;
   }
+  instructions.insert(instructions.begin() + cur, {InstructionType::ERROR, -1});
+  is_param_complete.insert(is_param_complete.begin() + cur, false);
   cursor_positions[1] = 1;
   cursor_positions[2] = 1;
+  for (int i = 0; i < command_length; i++) {
+    if ((instructions[i].type == InstructionType::JUMP ||
+         instructions[i].type == InstructionType::JUMPIFZERO) &&
+        instructions[i].param > cur) {
+      instructions[i].param++;
+    }
+  }
   PickerState::switchTab(0);
 }
 
@@ -237,6 +241,7 @@ void PickerInteract::refresh(const GameState &state) {
 Program PickerInteract::interact() {
   bool is_running = true;
   state.addCommand(true, renderer.MAX_INS);
+  renderer.renderParameters(state);
   while (is_running) {
     usleep(1000000 / 60);
     if (kbhit()) {
@@ -272,8 +277,8 @@ Program PickerInteract::interact() {
         default:
           break;
       }
+      renderer.renderParameters(state);
     }
-    renderer.renderParameters(state);
   }
   state.switchTab(true);
   state.switchTab(true);
