@@ -11,7 +11,7 @@
 void GameUI::setDelay(int ms) { delay_ms = ms; }
 
 Program GameUI::readProgramFromUser() {
-  PickerInteract picker(85, 1, engine->level_data);
+  PickerInteract picker(79, 7, engine->level_data);
   return picker.interact();
   // int n_ins;
   // std::cin >> n_ins;

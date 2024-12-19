@@ -63,6 +63,9 @@ public:
 
   // Render operations
   void renderOperations(int cursor_position);
+
+  // Render initial operating instructions
+  void renderInstructions(std::vector<std::string> infomation);
 };
 
 class PickerInteract {

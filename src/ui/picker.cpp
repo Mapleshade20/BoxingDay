@@ -106,6 +106,11 @@ PickerState::PickerState(std::vector<InstructionType> valid_instructions,
   this->valid_instructions = valid_instructions;  // GameUI
   this->total_tiles = total_tiles;
 }
+void PickerRenderer::renderInstructions(std::vector<std::string> infomation) {
+  for (int i = 0; i < infomation.size(); i++) {
+    renderer.renderWord(0, i - 6, infomation[i]);
+  }
+}
 
 // Move cursor up or down
 void PickerState::moveCursor(bool up, int max_length) {
@@ -219,7 +224,9 @@ bool PickerState::areAllParamsComplete() {
 // Constructor for PickerInteract
 PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
     : state(l.available_instructions, l.available_tiles),
-      renderer(start_x, start_y) {}
+      renderer(start_x, start_y) {
+  renderer.renderInstructions({"**To be replaced**"});
+}
 
 // Interact with the picker
 Program PickerInteract::interact() {
@@ -251,9 +258,6 @@ Program PickerInteract::interact() {
           break;
         case 'O':
           state.addCommand(true, renderer.MAX_INS);
-          break;
-        case '\n':
-          state.switchTab(false);
           break;
         case 'R':
           if (state.areAllParamsComplete()) is_running = false;
