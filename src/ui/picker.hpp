@@ -17,8 +17,7 @@ public:
   int current_tab = 1;
   int command_length = 1;
   int total_tiles;
-  std::vector<InstructionType> instructions;
-  std::vector<int> instruction_params;
+  std::vector<Instruction> instructions;
   std::vector<InstructionType> valid_instructions;
 
   // Constructor for PickerState
@@ -31,7 +30,7 @@ public:
   void switchTab(bool left);
 
   // Create a new command
-  void addCommand(bool above);
+  void addCommand(bool above, const int max_ins);
 
   // Delete a command
   void removeCommand();
@@ -51,6 +50,8 @@ private:
   Renderer renderer;
 
 public:
+  const int MAX_INS = 35;
+
   // Constructor for PickerRenderer
   PickerRenderer(int start_x, int start_y);
 
@@ -61,8 +62,7 @@ public:
   void renderParameters(PickerState &state);
 
   // Render operations
-  void renderOperations(int length, std::vector<InstructionType> instructions,
-                        std::vector<int> instruction_params);
+  void renderOperations(int cursor_position);
 };
 
 class PickerInteract {

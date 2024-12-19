@@ -40,52 +40,51 @@ void PickerRenderer::renderParameters(PickerState &state) {
   int command_length = state.command_length;
   int total_tiles = state.total_tiles;
   std::vector<int> cursor_positions = state.cursor_positions;
-  std::vector<InstructionType> instructions = state.instructions;
-  std::vector<int> instruction_params = state.instruction_params;
+  std::vector<Instruction> instructions = state.instructions;
   std::vector<InstructionType> valid_instructions = state.valid_instructions;
   switch (current_tab) {
     case 0:
-      renderer.renderWord(31, cursor_positions[0], ">");
+      renderer.renderWord(0, cursor_positions[0], ">");
       for (int i = 1; i <= command_length; i++) {
-        renderer.renderWord(32, i, std::to_string(i));
-        renderer.renderWord(37, i,
-                            PickerRenderer::insToString(instructions[i - 1]));
-        if (instruction_params[i - 1] > -1) {
-          renderer.renderWord(50, i, std::to_string(instruction_params[i - 1]));
+        renderer.renderWord(1, i, std::to_string(i));
+        renderer.renderWord(
+            6, i, PickerRenderer::insToString(instructions[i - 1].type));
+        if (instructions[i - 1].param > -1) {
+          renderer.renderWord(19, i, std::to_string(instructions[i - 1].param));
           break;
         }
       }
       break;
     case 1:
-      renderer.renderWord(31, cursor_positions[0], "-");
+      renderer.renderWord(0, cursor_positions[0], "-");
       for (int i = 1; i <= command_length; i++) {
-        renderer.renderWord(32, i, std::to_string(i));
+        renderer.renderWord(1, i, std::to_string(i));
       }
-      renderer.renderWord(36, cursor_positions[1], ">");
+      renderer.renderWord(5, cursor_positions[1], ">");
       for (int i = 1; i <= valid_instructions.size(); i++) {
         renderer.renderWord(
-            37, i, PickerRenderer::insToString(valid_instructions[i - 1]));
+            6, i, PickerRenderer::insToString(valid_instructions[i - 1]));
       }
       break;
     case 2:
-      renderer.renderWord(31, cursor_positions[0], "-");
-      renderer.renderWord(36, cursor_positions[1], "-");
-      renderer.renderWord(49, cursor_positions[2], ">");
+      renderer.renderWord(0, cursor_positions[0], "-");
+      renderer.renderWord(5, cursor_positions[1], "-");
+      renderer.renderWord(18, cursor_positions[2], ">");
       for (int i = 1; i <= command_length; i++) {
-        renderer.renderWord(32, i, std::to_string(i));
-        renderer.renderWord(37, i,
-                            PickerRenderer::insToString(instructions[i - 1]));
+        renderer.renderWord(1, i, std::to_string(i));
+        renderer.renderWord(
+            6, i, PickerRenderer::insToString(instructions[i - 1].type));
       }
       {
         InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
         if (tmp == InstructionType::JUMP ||
             tmp == InstructionType::JUMPIFZERO) {
           for (int i = 1; i <= command_length + 1; i++) {
-            renderer.renderWord(50, i, std::to_string(i));
+            renderer.renderWord(19, i, std::to_string(i));
           }
         } else {
           for (int i = 1; i <= valid_instructions.size(); i++) {
-            renderer.renderWord(50, i, std::to_string(i - 1));
+            renderer.renderWord(19, i, std::to_string(i - 1));
           }
         }
       }
@@ -94,7 +93,10 @@ void PickerRenderer::renderParameters(PickerState &state) {
       break;
   }
 }
-
+void PickerRenderer::renderOperations(int cursor_position) {
+  renderer.clearArea(0, 1, 1, MAX_INS + 1);
+  renderer.renderWord(0, cursor_position, ">");
+}
 // Constructor for PickerState
 PickerState::PickerState(std::vector<InstructionType> valid_instructions,
                          int total_tiles) {
@@ -110,6 +112,7 @@ void PickerState::moveCursor(bool up, int max_length) {
     if (cursor_positions[current_tab] < max_length)
       cursor_positions[current_tab]++;
   }
+  for (int i = current_tab + 1; i <= 2; i++) cursor_positions[i] = 1;
 }
 
 // Move tab left or right
@@ -123,8 +126,8 @@ void PickerState::switchTab(bool left) {
       return;
     }
     int cur = cursor_positions[1] - 1;
-    if (current_tab < 2 && instructions[cur] != InstructionType::INBOX &&
-        instructions[cur] != InstructionType::OUTBOX) {
+    if (current_tab < 2 && instructions[cur].type != InstructionType::INBOX &&
+        instructions[cur].type != InstructionType::OUTBOX) {
       current_tab++;
       cursor_positions[current_tab] = 1;
     } else {
@@ -135,20 +138,22 @@ void PickerState::switchTab(bool left) {
 }
 
 // Create a new command
-void PickerState::addCommand(bool above) {
-  if (current_tab > 0) return;
+void PickerState::addCommand(bool above, const int max_ins) {
+  if (current_tab > 0 || command_length >= max_ins) return;
   int cur = cursor_positions[0];  // create a new param, then move tab(right)
   command_length++;
   if (above) {
-    instructions.insert(instructions.begin() + cur - 1, InstructionType::ERROR);
-    instruction_params.insert(instruction_params.begin() + cur - 1, -1);
+    instructions.insert(instructions.begin() + cur - 1,
+                        {InstructionType::ERROR, -1});
     is_param_complete.insert(is_param_complete.begin() + cur - 1, false);
   } else {
-    instructions.insert(instructions.begin() + cur, InstructionType::ERROR);
-    instruction_params.insert(instruction_params.begin() + cur, -1);
+    instructions.insert(instructions.begin() + cur,
+                        {InstructionType::ERROR, -1});
     is_param_complete.insert(is_param_complete.begin() + cur, false);
     cursor_positions[0]++;
   }
+  cursor_positions[1] = 1;
+  cursor_positions[2] = 1;
   PickerState::switchTab(0);
 }
 
@@ -158,14 +163,13 @@ void PickerState::removeCommand() {
   int cur = cursor_positions[0];
   command_length--;
   instructions.erase(instructions.begin() + cur - 1);
-  instruction_params.erase(instruction_params.begin() + cur - 1);
   is_param_complete.erase(is_param_complete.begin() + cur - 1);
   for (int i = 0; i < command_length; i++) {
-    if ((instructions[i] == InstructionType::JUMP ||
-         instructions[i] == InstructionType::JUMPIFZERO) &&
-        instruction_params[i] >= cur) {
-      instruction_params[i]--;
-      if (instruction_params[i] == 0) instruction_params[i]++;
+    if ((instructions[i].type == InstructionType::JUMP ||
+         instructions[i].type == InstructionType::JUMPIFZERO) &&
+        instructions[i].param >= cur) {
+      instructions[i].param--;
+      if (instructions[i].param == 0) instructions[i].param++;
     }
   }
 }
@@ -174,18 +178,18 @@ void PickerState::removeCommand() {
 void PickerState::saveCurrentCommand() {
   int cur = cursor_positions[0] - 1;
   is_param_complete[cur] = true;
-  instructions[cur] = valid_instructions[cursor_positions[1] - 1];
-  if (instructions[cur] == InstructionType::INBOX ||
-      instructions[cur] == InstructionType::OUTBOX) {
-    instruction_params[cur] = -1;
+  instructions[cur].type = valid_instructions[cursor_positions[1] - 1];
+  if (instructions[cur].type == InstructionType::INBOX ||
+      instructions[cur].type == InstructionType::OUTBOX) {
+    instructions[cur].param = -1;
     return;
   }
-  if (instructions[cur] == InstructionType::JUMP ||
-      instructions[cur] == InstructionType::JUMPIFZERO) {
-    instruction_params[cur] = cursor_positions[2];
+  if (instructions[cur].type == InstructionType::JUMP ||
+      instructions[cur].type == InstructionType::JUMPIFZERO) {
+    instructions[cur].param = cursor_positions[2];
     return;
   }
-  instruction_params[cur] = cursor_positions[2] - 1;
+  instructions[cur].param = cursor_positions[2] - 1;
 }
 
 // Get the length of the current command
@@ -216,7 +220,7 @@ PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
 // Interact with the picker
 Program PickerInteract::interact() {
   bool is_running = true;
-  state.addCommand(true);
+  state.addCommand(true, renderer.MAX_INS);
   while (is_running) {
     usleep(1000000 / 60);
     if (kbhit()) {
@@ -239,10 +243,10 @@ Program PickerInteract::interact() {
           state.removeCommand();
           break;
         case 'o':
-          state.addCommand(false);
+          state.addCommand(false, renderer.MAX_INS);
           break;
         case 'O':
-          state.addCommand(true);
+          state.addCommand(true, renderer.MAX_INS);
           break;
         case '\n':
           state.switchTab(false);
@@ -256,9 +260,11 @@ Program PickerInteract::interact() {
     }
     renderer.renderParameters(state);
   }
-
+  state.switchTab(true);
+  state.switchTab(true);
+  state.cursor_positions = {1, 1, 1};
+  renderer.renderParameters(state);
   Program program;
   program.setInstructions(this->state.instructions);
-  // FIXME: Refactor state.instructions to be a vector<Instruction>
   return program;
 }
