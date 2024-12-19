@@ -97,7 +97,7 @@ void PickerRenderer::renderParameters(PickerState &state) {
   }
 }
 void PickerRenderer::renderOperations(int cursor_position) {
-  renderer.clearArea(0, 1, 1, MAX_INS + 1);
+  renderer.clearArea(0, 0, 1, MAX_INS + 1);
   renderer.renderWord(0, cursor_position, ">");
 }
 // Constructor for PickerState
@@ -266,6 +266,9 @@ Program PickerInteract::interact() {
           break;
         case 'R':
           if (state.areAllParamsComplete()) is_running = false;
+          break;
+        case 'Q':
+          throw std::runtime_error("User quit");
           break;
         default:
           break;
