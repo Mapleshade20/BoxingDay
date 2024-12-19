@@ -269,7 +269,6 @@ Program PickerInteract::interact() {
           break;
         case 'Q':
           throw std::runtime_error("User quit");
-          break;
         default:
           break;
       }
