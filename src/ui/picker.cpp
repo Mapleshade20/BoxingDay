@@ -228,7 +228,12 @@ PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
   renderer.renderInstructions({"**To be replaced**"});
 }
 
-// Interact with the picker
+// Update the picker in run-time. Once per call.
+void PickerInteract::refresh(const GameState &state) {
+  renderer.renderOperations(state.cursor);
+}
+
+// Interact with the picker. Have a while loop embedded.
 Program PickerInteract::interact() {
   bool is_running = true;
   state.addCommand(true, renderer.MAX_INS);

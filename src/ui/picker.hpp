@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "../core/gamestate.hpp"
 #include "../core/leveldata.hpp"
 #include "../core/types.hpp"
 #include "renderer.hpp"
@@ -77,6 +78,9 @@ public:
   // Constructor for PickerInteract
   PickerInteract(int start_x, int start_y, const LevelData &l);
 
-  // Interact with the picker
+  // Interact with the picker. Have a while loop embedded.
   Program interact();
+
+  // Update the picker in run-time. Once per call.
+  void refresh(const GameState &state);
 };

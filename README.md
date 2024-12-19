@@ -34,7 +34,15 @@ Keyboard controls a virtual cursor over buttons and `instructions`, and triggers
 
 ## Todos
 
-- [x] Read level data from `toml` files
-- [x] Scan instructions from stdin and generate an `array` that contains each instruction as a `struct`
+- [x] Parse level data from `toml` files
+- [x] Scan instructions from stdin and return a Program
 - [x] Run player's instructions and return a result
-- [ ] Finalize Alpha in accordance with OJ
+- [x] Finalize version alpha in accordance with OJ
+- [x] UI: display run-time
+- [x] UI: display interactive picker
+- [ ] UI: display result
+- [ ] UI: read i18n text file and show in picker's hint
+- [ ] Allow quit in picker & run-time
+- [ ] UI: main level-selection menu
+- [ ] FileIO: store play data and decide if the next level is unlocked
+- [ ] UI: (optional) pause menu

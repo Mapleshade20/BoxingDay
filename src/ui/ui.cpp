@@ -10,54 +10,52 @@
 
 void GameUI::setDelay(int ms) { delay_ms = ms; }
 
-Program GameUI::readProgramFromUser() {
-  PickerInteract picker(79, 7, engine->level_data);
-  return picker.interact();
-  // int n_ins;
-  // std::cin >> n_ins;
-  // std::cin.ignore(1000, '\n');  // Clear newline after reading n_ins
-  // Program program;
-  //
-  // for (int t = 0; t < n_ins; t++) {
-  //   std::string s_input, command;
-  //   std::getline(std::cin, s_input);
-  //   std::stringstream stream(s_input);
-  //   int param = -1;
-  //
-  //   stream >> command;
-  //   if (command.empty()) {
-  //     command = "error";
-  //     continue;
-  //   }
-  //
-  //   if (!stream.eof()) {
-  //     std::string param_str;
-  //     stream >> param_str;
-  //
-  //     if (!param_str.empty() && stream.eof()) {
-  //       try {
-  //         param = std::stoi(param_str);
-  //       } catch (const std::invalid_argument &) {
-  //         command = "error";
-  //       } catch (const std::out_of_range &) {
-  //         command = "error";
-  //       }
-  //     } else {
-  //       command = "error";  // More than 2 words or invalid param
-  //     }
-  //   }
-  //
-  //   Instruction i = Instruction::fromString(command, param);
-  //   if (std::none_of(engine->level_data.available_instructions.begin(),
-  //                    engine->level_data.available_instructions.end(),
-  //                    [&i](InstructionType type) { return type == i.type; }))
-  //                    {
-  //     i.type = InstructionType::ERROR;
-  //   }
-  //   program.addInstruction(i);
-  // }
-  // return program;
-}
+// Program GameUI::readProgramFromUser() {
+// int n_ins;
+// std::cin >> n_ins;
+// std::cin.ignore(1000, '\n');  // Clear newline after reading n_ins
+// Program program;
+//
+// for (int t = 0; t < n_ins; t++) {
+//   std::string s_input, command;
+//   std::getline(std::cin, s_input);
+//   std::stringstream stream(s_input);
+//   int param = -1;
+//
+//   stream >> command;
+//   if (command.empty()) {
+//     command = "error";
+//     continue;
+//   }
+//
+//   if (!stream.eof()) {
+//     std::string param_str;
+//     stream >> param_str;
+//
+//     if (!param_str.empty() && stream.eof()) {
+//       try {
+//         param = std::stoi(param_str);
+//       } catch (const std::invalid_argument &) {
+//         command = "error";
+//       } catch (const std::out_of_range &) {
+//         command = "error";
+//       }
+//     } else {
+//       command = "error";  // More than 2 words or invalid param
+//     }
+//   }
+//
+//   Instruction i = Instruction::fromString(command, param);
+//   if (std::none_of(engine->level_data.available_instructions.begin(),
+//                    engine->level_data.available_instructions.end(),
+//                    [&i](InstructionType type) { return type == i.type; }))
+//                    {
+//     i.type = InstructionType::ERROR;
+//   }
+//   program.addInstruction(i);
+// }
+// return program;
+// }
 
 int GameUI::menu() {
   // NOTE: Need preview & select level UI
@@ -108,16 +106,18 @@ void GameUI::run() {
     usleep(1500000);
 
     // Start phase 1: picker
-    Program program = readProgramFromUser();
-    engine->loadProgram(program);
+    PickerInteract picker(79, 7, engine->level_data);
+    engine->loadProgram(picker.interact());
 
     // Start phase 2: execution
     while (true) {
       try {
         bool continues = engine->executeNextInstruction();
-        reg_renderer.refresh(engine->getState());
-        tiles_renderer.refresh(engine->getState());
-        sequence_renderer.refresh(engine->getState());
+        const GameState state = engine->getState();
+        picker.refresh(state);
+        reg_renderer.refresh(state);
+        tiles_renderer.refresh(state);
+        sequence_renderer.refresh(state);
 
         usleep(delay_ms * 1000);
 
