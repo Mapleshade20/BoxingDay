@@ -50,6 +50,10 @@ Instruction Instruction::fromString(const std::string &name, int param) {
   return ans;
 }
 
+void Program::setInstructions(std::vector<Instruction> instructions) {
+  this->instructions = instructions;
+}
+
 void Program::addInstruction(const Instruction &inst) {
   instructions.push_back(inst);
 }

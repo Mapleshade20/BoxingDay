@@ -2,59 +2,61 @@
 
 #include <unistd.h>
 
-#include <algorithm>
 #include <iostream>
-#include <sstream>
 
 #include "instances.hpp"
 #include "libtui.hpp"
+#include "picker.hpp"
 
 void GameUI::setDelay(int ms) { delay_ms = ms; }
 
 Program GameUI::readProgramFromUser() {
-  int n_ins;
-  std::cin >> n_ins;
-  std::cin.ignore(1000, '\n');  // Clear newline after reading n_ins
-  Program program;
-
-  for (int t = 0; t < n_ins; t++) {
-    std::string s_input, command;
-    std::getline(std::cin, s_input);
-    std::stringstream stream(s_input);
-    int param = -1;
-
-    stream >> command;
-    if (command.empty()) {
-      command = "error";
-      continue;
-    }
-
-    if (!stream.eof()) {
-      std::string param_str;
-      stream >> param_str;
-
-      if (!param_str.empty() && stream.eof()) {
-        try {
-          param = std::stoi(param_str);
-        } catch (const std::invalid_argument &) {
-          command = "error";
-        } catch (const std::out_of_range &) {
-          command = "error";
-        }
-      } else {
-        command = "error";  // More than 2 words or invalid param
-      }
-    }
-
-    Instruction i = Instruction::fromString(command, param);
-    if (std::none_of(engine->level_data.available_instructions.begin(),
-                     engine->level_data.available_instructions.end(),
-                     [&i](InstructionType type) { return type == i.type; })) {
-      i.type = InstructionType::ERROR;
-    }
-    program.addInstruction(i);
-  }
-  return program;
+  PickerInteract picker(1, 1, engine->level_data);
+  return picker.interact();
+  // int n_ins;
+  // std::cin >> n_ins;
+  // std::cin.ignore(1000, '\n');  // Clear newline after reading n_ins
+  // Program program;
+  //
+  // for (int t = 0; t < n_ins; t++) {
+  //   std::string s_input, command;
+  //   std::getline(std::cin, s_input);
+  //   std::stringstream stream(s_input);
+  //   int param = -1;
+  //
+  //   stream >> command;
+  //   if (command.empty()) {
+  //     command = "error";
+  //     continue;
+  //   }
+  //
+  //   if (!stream.eof()) {
+  //     std::string param_str;
+  //     stream >> param_str;
+  //
+  //     if (!param_str.empty() && stream.eof()) {
+  //       try {
+  //         param = std::stoi(param_str);
+  //       } catch (const std::invalid_argument &) {
+  //         command = "error";
+  //       } catch (const std::out_of_range &) {
+  //         command = "error";
+  //       }
+  //     } else {
+  //       command = "error";  // More than 2 words or invalid param
+  //     }
+  //   }
+  //
+  //   Instruction i = Instruction::fromString(command, param);
+  //   if (std::none_of(engine->level_data.available_instructions.begin(),
+  //                    engine->level_data.available_instructions.end(),
+  //                    [&i](InstructionType type) { return type == i.type; }))
+  //                    {
+  //     i.type = InstructionType::ERROR;
+  //   }
+  //   program.addInstruction(i);
+  // }
+  // return program;
 }
 
 int GameUI::menu() {
@@ -91,15 +93,10 @@ void GameUI::run() {
     const LevelData level_data = LevelData::loadLevel(level);
     engine = new GameEngine(level_data);
 
-    // TODO: replace it with picker and put it below ui components
-    Program program = readProgramFromUser();
-    engine->loadProgram(program);
-
-    // Start ui components
+    // Set up ui components
     setNonBlockingInput();
     hideCursor();
-    std::cout << "Welcome to the Text-Based Game!" << std::endl;
-    usleep(1000000);
+    usleep(500000);
     CanvasRenderer canvas_renderer(level_data);
     RegRenderer reg_renderer(11, 7, engine->getState(), 1.0);
     TilesRenderer tiles_renderer(19, 13, engine->getState());
@@ -107,8 +104,12 @@ void GameUI::run() {
     canvas_renderer.start();
     reg_renderer.setup(engine->getState());
     tiles_renderer.setup(engine->getState());
-    usleep(1000000);
 
+    // Start phase 1: picker
+    Program program = readProgramFromUser();
+    engine->loadProgram(program);
+
+    // Start phase 2: execution
     while (true) {
       try {
         bool continues = engine->executeNextInstruction();

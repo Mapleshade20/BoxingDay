@@ -1,43 +1,16 @@
+#include "picker.hpp"
+
+#include <unistd.h>
+
 #include <iostream>
-#include <string>
-#include <vector>
 
-#include "../core/types.hpp"
-#include "./libtui.hpp"
-#include "renderer.hpp"
+#include "libtui.hpp"
 
-class PickerState {
-private:
-  std::vector<bool> complete_param;
+// Constructor for PickerRenderer
+PickerRenderer::PickerRenderer(int start_x, int start_y)
+    : renderer(start_x, start_y) {}
 
-public:
-  std::vector<int> cursor = {1, 1,
-                             1};  // 记录每层tab指针的位置，从而记录每次的操作
-  int tab = 1;
-  int len = 1;  // 命令长度
-  int tile_num;
-  std::vector<InstructionType> param;
-  std::vector<int> param_num;
-  std::vector<InstructionType> valid_instructions;
-  PickerState(std::vector<InstructionType> valid_ins, int num);
-  void move1(bool up, int len_tab);
-  void moveTab(bool left);
-  void newCommand(bool up);
-  void deleteCommand();
-  void saveCommand();
-  int getLen();
-  bool checkParam();
-};
-
-class PickerRenderer {
-  Renderer renderer;
-
-public:
-  static std::string insToString(InstructionType instruction_type);
-  void paramRender(PickerState &state);
-  void operateRender(int len, std::vector<InstructionType> param,
-                     std::vector<int> param_num);
-};
+// Convert InstructionType to string
 std::string PickerRenderer::insToString(InstructionType instruction_type) {
   switch (instruction_type) {
     case InstructionType::INBOX:
@@ -60,50 +33,54 @@ std::string PickerRenderer::insToString(InstructionType instruction_type) {
       return ("error");
   }
 }
-void PickerRenderer::paramRender(PickerState &state) {
-  int tab = state.tab;
-  int len = state.len;
-  int tile_num = state.tile_num;
-  std::vector<int> cursor = state.cursor;
-  std::vector<InstructionType> param = state.param;
-  std::vector<int> param_num = state.param_num;
+
+// Render parameters
+void PickerRenderer::renderParameters(PickerState &state) {
+  int current_tab = state.current_tab;
+  int command_length = state.command_length;
+  int total_tiles = state.total_tiles;
+  std::vector<int> cursor_positions = state.cursor_positions;
+  std::vector<InstructionType> instructions = state.instructions;
+  std::vector<int> instruction_params = state.instruction_params;
   std::vector<InstructionType> valid_instructions = state.valid_instructions;
-  switch (tab) {
+  switch (current_tab) {
     case 0:
-      renderer.renderWord(31, cursor[0], ">");
-      for (int i = 1; i <= len; i++) {
+      renderer.renderWord(31, cursor_positions[0], ">");
+      for (int i = 1; i <= command_length; i++) {
         renderer.renderWord(32, i, std::to_string(i));
-        renderer.renderWord(37, i, PickerRenderer::insToString(param[i - 1]));
-        if (param_num[i - 1] > -1) {
-          renderer.renderWord(50, i, std::to_string(param_num[i - 1]));
+        renderer.renderWord(37, i,
+                            PickerRenderer::insToString(instructions[i - 1]));
+        if (instruction_params[i - 1] > -1) {
+          renderer.renderWord(50, i, std::to_string(instruction_params[i - 1]));
           break;
         }
       }
       break;
     case 1:
-      renderer.renderWord(31, cursor[0], "-");
-      for (int i = 1; i <= len; i++) {
+      renderer.renderWord(31, cursor_positions[0], "-");
+      for (int i = 1; i <= command_length; i++) {
         renderer.renderWord(32, i, std::to_string(i));
       }
-      renderer.renderWord(36, cursor[1], ">");
+      renderer.renderWord(36, cursor_positions[1], ">");
       for (int i = 1; i <= valid_instructions.size(); i++) {
         renderer.renderWord(
             37, i, PickerRenderer::insToString(valid_instructions[i - 1]));
       }
       break;
     case 2:
-      renderer.renderWord(31, cursor[0], "-");
-      renderer.renderWord(36, cursor[1], "-");
-      renderer.renderWord(49, cursor[2], ">");
-      for (int i = 1; i <= len; i++) {
+      renderer.renderWord(31, cursor_positions[0], "-");
+      renderer.renderWord(36, cursor_positions[1], "-");
+      renderer.renderWord(49, cursor_positions[2], ">");
+      for (int i = 1; i <= command_length; i++) {
         renderer.renderWord(32, i, std::to_string(i));
-        renderer.renderWord(37, i, PickerRenderer::insToString(param[i - 1]));
+        renderer.renderWord(37, i,
+                            PickerRenderer::insToString(instructions[i - 1]));
       }
       {
-        InstructionType tmp = valid_instructions[cursor[1] - 1];
+        InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
         if (tmp == InstructionType::JUMP ||
             tmp == InstructionType::JUMPIFZERO) {
-          for (int i = 1; i <= len + 1; i++) {
+          for (int i = 1; i <= command_length + 1; i++) {
             renderer.renderWord(50, i, std::to_string(i));
           }
         } else {
@@ -118,147 +95,170 @@ void PickerRenderer::paramRender(PickerState &state) {
   }
 }
 
-PickerState::PickerState(std::vector<InstructionType> valid_ins, int num) {
-  valid_instructions = valid_ins;  // GameUI
-  tile_num = num;
+// Constructor for PickerState
+PickerState::PickerState(std::vector<InstructionType> valid_instructions,
+                         int total_tiles) {
+  this->valid_instructions = valid_instructions;  // GameUI
+  this->total_tiles = total_tiles;
 }
-void PickerState::move1(bool up, int len_tab) {  // to move up or down
+
+// Move cursor up or down
+void PickerState::moveCursor(bool up, int max_length) {
   if (up) {
-    if (cursor[tab] > 1) cursor[tab]--;
+    if (cursor_positions[current_tab] > 1) cursor_positions[current_tab]--;
   } else {
-    if (cursor[tab] < len_tab) cursor[tab]++;
+    if (cursor_positions[current_tab] < max_length)
+      cursor_positions[current_tab]++;
   }
 }
-void PickerState::moveTab(bool left) {  // to move tab(left or right)
+
+// Move tab left or right
+void PickerState::switchTab(bool left) {
   if (left) {
-    if (tab > 0) tab--;
+    if (current_tab > 0) current_tab--;
   } else {
-    if (tab == 0) {
-      tab++;
-      cursor[tab] = 1;
+    if (current_tab == 0) {
+      current_tab++;
+      cursor_positions[current_tab] = 1;
       return;
     }
-    int cur = cursor[1] - 1;
-    if (tab < 2 && param[cur] != InstructionType::INBOX &&
-        param[cur] != InstructionType::OUTBOX) {
-      tab++;
-      cursor[tab] = 1;
+    int cur = cursor_positions[1] - 1;
+    if (current_tab < 2 && instructions[cur] != InstructionType::INBOX &&
+        instructions[cur] != InstructionType::OUTBOX) {
+      current_tab++;
+      cursor_positions[current_tab] = 1;
     } else {
-      PickerState::saveCommand();
-      tab = 0;
+      PickerState::saveCurrentCommand();
+      current_tab = 0;
     }
   }
 }
-void PickerState::newCommand(bool up) {
-  if (tab > 0) return;
-  int cur = cursor[0];  // to create a new param, then move tab(right)
-  len++;
-  if (up) {
-    param.insert(param.begin() + cur - 1, InstructionType::ERROR);
-    param_num.insert(param_num.begin() + cur - 1, -1);
-    complete_param.insert(complete_param.begin() + cur - 1, false);
+
+// Create a new command
+void PickerState::addCommand(bool above) {
+  if (current_tab > 0) return;
+  int cur = cursor_positions[0];  // create a new param, then move tab(right)
+  command_length++;
+  if (above) {
+    instructions.insert(instructions.begin() + cur - 1, InstructionType::ERROR);
+    instruction_params.insert(instruction_params.begin() + cur - 1, -1);
+    is_param_complete.insert(is_param_complete.begin() + cur - 1, false);
   } else {
-    param.insert(param.begin() + cur, InstructionType::ERROR);
-    param_num.insert(param_num.begin() + cur, -1);
-    complete_param.insert(complete_param.begin() + cur, false);
-    cursor[0]++;
+    instructions.insert(instructions.begin() + cur, InstructionType::ERROR);
+    instruction_params.insert(instruction_params.begin() + cur, -1);
+    is_param_complete.insert(is_param_complete.begin() + cur, false);
+    cursor_positions[0]++;
   }
-  PickerState::moveTab(0);
+  PickerState::switchTab(0);
 }
-void PickerState::deleteCommand() {  // to delete a param
-  if (tab > 0) return;
-  int cur = cursor[0];
-  len--;
-  param.erase(param.begin() + cur - 1);
-  param_num.erase(param_num.begin() + cur - 1);
-  complete_param.erase(complete_param.begin() + cur - 1);
-  for (int i = 0; i < len; i++) {
-    if ((param[i] == InstructionType::JUMP ||
-         param[i] == InstructionType::JUMPIFZERO) &&
-        param_num[i] >= cur) {
-      param_num[i]--;
-      if (param_num[i] == 0) param_num[i]++;
+
+// Delete a command
+void PickerState::removeCommand() {
+  if (current_tab > 0) return;
+  int cur = cursor_positions[0];
+  command_length--;
+  instructions.erase(instructions.begin() + cur - 1);
+  instruction_params.erase(instruction_params.begin() + cur - 1);
+  is_param_complete.erase(is_param_complete.begin() + cur - 1);
+  for (int i = 0; i < command_length; i++) {
+    if ((instructions[i] == InstructionType::JUMP ||
+         instructions[i] == InstructionType::JUMPIFZERO) &&
+        instruction_params[i] >= cur) {
+      instruction_params[i]--;
+      if (instruction_params[i] == 0) instruction_params[i]++;
     }
   }
 }
-void PickerState::saveCommand() {
-  int cur = cursor[0] - 1;
-  complete_param[cur] = true;
-  param[cur] = valid_instructions[cursor[1] - 1];
-  if (param[cur] == InstructionType::INBOX ||
-      param[cur] == InstructionType::OUTBOX) {
-    param_num[cur] = -1;
+
+// Save the current command
+void PickerState::saveCurrentCommand() {
+  int cur = cursor_positions[0] - 1;
+  is_param_complete[cur] = true;
+  instructions[cur] = valid_instructions[cursor_positions[1] - 1];
+  if (instructions[cur] == InstructionType::INBOX ||
+      instructions[cur] == InstructionType::OUTBOX) {
+    instruction_params[cur] = -1;
     return;
   }
-  if (param[cur] == InstructionType::JUMP ||
-      param[cur] == InstructionType::JUMPIFZERO) {
-    param_num[cur] = cursor[2];
+  if (instructions[cur] == InstructionType::JUMP ||
+      instructions[cur] == InstructionType::JUMPIFZERO) {
+    instruction_params[cur] = cursor_positions[2];
     return;
   }
-  param_num[cur] = cursor[2] - 1;
+  instruction_params[cur] = cursor_positions[2] - 1;
 }
-int PickerState::getLen() {
-  if (tab == 0) return len;
-  if (tab == 2) {
-    InstructionType tmp = valid_instructions[cursor[1] - 1];
+
+// Get the length of the current command
+int PickerState::getCommandLength() {
+  if (current_tab == 0) return command_length;
+  if (current_tab == 2) {
+    InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
     if (tmp == InstructionType::JUMP || tmp == InstructionType::JUMPIFZERO)
-      return len + 1;
-    return tile_num;
+      return command_length + 1;
+    return total_tiles;
   }
   return valid_instructions.size();
 }
-bool PickerState::checkParam() {
-  for (int i = 0; i < len; i++) {
-    if (complete_param[i] == false) return false;
+
+// Check if all parameters are complete
+bool PickerState::areAllParamsComplete() {
+  for (int i = 0; i < command_length; i++) {
+    if (is_param_complete[i] == false) return false;
   }
   return true;
 }
-class PickerInteract {
-private:
-  PickerState state;
-  PickerRenderer renderer;
 
-public:
-  void interact();
-};
-void PickerInteract::interact() {
-  bool flag = true;
-  state.newCommand(true);
-  while (flag) {
+// Constructor for PickerInteract
+PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
+    : state(l.available_instructions, l.available_tiles),
+      renderer(start_x, start_y) {}
+
+// Interact with the picker
+Program PickerInteract::interact() {
+  bool is_running = true;
+  state.addCommand(true);
+  while (is_running) {
+    usleep(1000000 / 60);
     if (kbhit()) {
       char input;
       std::cin >> input;
       switch (input) {
         case 'h':
-          state.moveTab(true);
+          state.switchTab(true);
           break;
         case 'l':
-          state.moveTab(false);
+          state.switchTab(false);
           break;
         case 'j':
-          state.move1(false, state.getLen());
+          state.moveCursor(false, state.getCommandLength());
           break;
         case 'k':
-          state.move1(true, state.getLen());
+          state.moveCursor(true, state.getCommandLength());
           break;
         case 'd':
-          state.deleteCommand();
+          state.removeCommand();
           break;
         case 'o':
-          state.newCommand(false);
+          state.addCommand(false);
           break;
         case 'O':
-          state.newCommand(true);
+          state.addCommand(true);
           break;
         case '\n':
-          state.moveTab(false);
+          state.switchTab(false);
           break;
         case 'R':
-          if (state.checkParam()) flag = false;
+          if (state.areAllParamsComplete()) is_running = false;
+          break;
         default:
           break;
       }
     }
-    renderer.paramRender(state);
+    renderer.renderParameters(state);
   }
+
+  Program program;
+  program.setInstructions(this->state.instructions);
+  // FIXME: Refactor state.instructions to be a vector<Instruction>
+  return program;
 }

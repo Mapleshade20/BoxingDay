@@ -57,6 +57,7 @@ private:
 
 public:
   void addInstruction(const Instruction &inst);
+  void setInstructions(std::vector<Instruction> instructions);
   void clear();
   const Instruction &at(int index) const;
   int size() const;
