@@ -42,6 +42,7 @@ void PickerRenderer::renderParameters(PickerState &state) {
   std::vector<int> cursor_positions = state.cursor_positions;
   std::vector<Instruction> instructions = state.instructions;
   std::vector<InstructionType> valid_instructions = state.valid_instructions;
+  renderer.clearArea(0, 0, 22, 38);
   switch (current_tab) {
     case 0:
       renderer.renderWord(0, cursor_positions[0], ">");
