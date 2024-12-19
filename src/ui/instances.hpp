@@ -7,7 +7,7 @@ class CanvasRenderer : public Renderer {
 public:
   CanvasRenderer(const LevelData &l);
   void renderLine(int x, int y, int length, bool is_horizontal);
-  void start();
+  void setup();
 };
 
 enum class RenderMode { TEXT, ALL, CLEAR_AND_ALL };
@@ -22,8 +22,11 @@ protected:
 
 public:
   MovableBoxRenderer(int start_x, int start_y);
+
+  // Change base coordinate
   void moveTo(Coordinate dest);
 
+  // Update render in-game
   void update(std::string word, RenderMode mode, bool is_highlighted);
 };
 
@@ -38,7 +41,11 @@ protected:
 public:
   RegRenderer(int start_x, int start_y, const GameState &state,
               float speed_rate);
+
+  // Initial render
   void setup(const GameState &state);
+
+  // Update render in-game
   void refresh(const GameState &state);
 };
 
@@ -51,8 +58,10 @@ protected:
 
 public:
   TilesRenderer(int start_x, int start_y, const GameState &state);
+
   // Initial render
   void setup(const GameState &state);
+
   // Update render in-game
   void refresh(const GameState &state);
 };
@@ -60,9 +69,18 @@ public:
 class SequenceRenderer : public MovableBoxRenderer {
 private:
   // bool(state.reg.current_tile + 2) == 1 if inbox
-  static const int N_COLUMNS = 7;
+  static const int N_PER_COLUMN = 6;
+  static const int X_DELTA = 64;
   static const int Y_DELTA = 3;
 
 public:
+  SequenceRenderer(int start_x, int start_y);
+  void renderVisibleInbox(const GameState &state);
+  void renderVisibleOutbox(const GameState &state);
+
+  // Initial render
+  void setup(const GameState &state);
+
+  // Update render in-game
   void refresh(const GameState &state);
 };

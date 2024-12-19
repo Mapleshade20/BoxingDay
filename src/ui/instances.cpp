@@ -138,6 +138,69 @@ void TilesRenderer::refresh(const GameState &state) {
   this->prev_tile_idx = state.reg.current_tile;
 }
 
+SequenceRenderer::SequenceRenderer(int start_x, int start_y)
+    : MovableBoxRenderer(start_x, start_y) {
+  this->shape = {
+      "/-----\\",  // line 0
+      "|     |",   // line 1
+      "\\-----/"   // line 2
+  };
+  this->showup_coords =
+      std::vector<Coordinate>(N_PER_COLUMN * 2);  // inbox & outbox
+  for (int i = 0; i < N_PER_COLUMN; i++) {
+    this->showup_coords[i] = {start_x, start_y + i * Y_DELTA};
+    this->showup_coords[i + N_PER_COLUMN] = {start_x + X_DELTA,
+                                             start_y + i * Y_DELTA};
+  }
+}
+
+void SequenceRenderer::renderVisibleInbox(const GameState &state) {
+  for (int i = 0; i < N_PER_COLUMN; i++) {
+    moveTo(this->showup_coords.at(i));
+    if (state.inbox_cursor + i < state.inbox.size()) {
+      update(std::to_string(state.inbox.at(state.inbox_cursor + i)),
+             RenderMode::TEXT, false);
+    } else {
+      update(space(BLANK_WIDTH), RenderMode::TEXT, false);
+    }
+  }
+}
+
+void SequenceRenderer::renderVisibleOutbox(const GameState &state) {
+  for (int i = 0; i < N_PER_COLUMN; i++) {
+    moveTo(this->showup_coords.at(i + N_PER_COLUMN));
+    if (i < state.outbox_buffer.size()) {
+      update(std::to_string(
+                 state.outbox_buffer.at(state.outbox_buffer.size() - 1 - i)),
+             RenderMode::TEXT, (i == 0));
+    } else {
+      update(space(BLANK_WIDTH), RenderMode::TEXT, false);
+    }
+  }
+}
+
+void SequenceRenderer::setup(const GameState &state) {
+  for (int i = 0; i < N_PER_COLUMN * 2; i++) {
+    moveTo(this->showup_coords.at(i));
+    update("", RenderMode::ALL, false);
+  }
+  renderVisibleInbox(state);
+  renderVisibleOutbox(state);
+}
+
+void SequenceRenderer::refresh(const GameState &state) {
+  switch (state.reg.current_tile) {
+    case -1:
+      renderVisibleInbox(state);
+      break;
+    case -2:
+      renderVisibleOutbox(state);
+      break;
+    default:
+      break;
+  }
+}
+
 void CanvasRenderer::renderLine(int x, int y, int length, bool is_horizontal) {
   if (is_horizontal) {
     moveCursor(x, y);
@@ -154,12 +217,12 @@ void CanvasRenderer::renderLine(int x, int y, int length, bool is_horizontal) {
   }
 }
 
-void CanvasRenderer::start() {
+void CanvasRenderer::setup() {
   clearConsole();
-  renderLine(1, 1, 83, true);
+  renderLine(1, 1, 75, true);
   renderLine(1, 1, 30, false);
-  renderLine(1, 30, 83, true);
-  renderLine(83, 1, 30, false);
+  renderLine(1, 30, 75, true);
+  renderLine(75, 1, 30, false);
   renderShape(2, 1);
 }
 

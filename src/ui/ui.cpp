@@ -100,10 +100,12 @@ void GameUI::run() {
     CanvasRenderer canvas_renderer(level_data);
     RegRenderer reg_renderer(11, 7, engine->getState(), 1.0);
     TilesRenderer tiles_renderer(19, 13, engine->getState());
-    // SequenceRenderer ...
-    canvas_renderer.start();
+    SequenceRenderer sequence_renderer(3, 8);
+    canvas_renderer.setup();
     reg_renderer.setup(engine->getState());
     tiles_renderer.setup(engine->getState());
+    sequence_renderer.setup(engine->getState());
+    usleep(1500000);
 
     // Start phase 1: picker
     Program program = readProgramFromUser();
@@ -115,10 +117,12 @@ void GameUI::run() {
         bool continues = engine->executeNextInstruction();
         reg_renderer.refresh(engine->getState());
         tiles_renderer.refresh(engine->getState());
+        sequence_renderer.refresh(engine->getState());
 
         usleep(delay_ms * 1000);
 
         if (!continues) {
+          usleep(delay_ms * 1000);
           bool result = engine->validateOutput();
           showCursor();
           resetTerminal();
@@ -127,6 +131,7 @@ void GameUI::run() {
           break;
         }
       } catch (ExecutionError error) {
+        usleep(delay_ms * 1000);
         showCursor();
         resetTerminal();
         clearConsole();
