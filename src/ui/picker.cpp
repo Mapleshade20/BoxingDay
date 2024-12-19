@@ -86,7 +86,7 @@ void PickerRenderer::renderParameters(PickerState &state) {
             renderer.renderWord(19, i, std::to_string(i));
           }
         } else {
-          for (int i = 1; i <= valid_instructions.size(); i++) {
+          for (int i = 1; i <= total_tiles; i++) {
             renderer.renderWord(19, i, std::to_string(i - 1));
           }
         }
