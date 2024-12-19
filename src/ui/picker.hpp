@@ -14,8 +14,8 @@ private:
 public:
   std::vector<int> cursor_positions = {
       1, 1, 1};  // 记录每层tab指针位置，从而记录每次操作
-  int current_tab = 1;
-  int command_length = 1;
+  int current_tab = 0;
+  int command_length = 0;
   int total_tiles;
   std::vector<Instruction> instructions;
   std::vector<InstructionType> valid_instructions;

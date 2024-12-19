@@ -30,7 +30,7 @@ std::string PickerRenderer::insToString(InstructionType instruction_type) {
     case InstructionType::JUMPIFZERO:
       return ("jumpifzero");
     default:
-      return ("error");
+      return ("???");
   }
 }
 
@@ -52,7 +52,7 @@ void PickerRenderer::renderParameters(PickerState &state) {
             6, i, PickerRenderer::insToString(instructions[i - 1].type));
         if (instructions[i - 1].param > -1) {
           renderer.renderWord(19, i, std::to_string(instructions[i - 1].param));
-          break;
+          continue;
         }
       }
       break;
@@ -73,8 +73,10 @@ void PickerRenderer::renderParameters(PickerState &state) {
       renderer.renderWord(18, cursor_positions[2], ">");
       for (int i = 1; i <= command_length; i++) {
         renderer.renderWord(1, i, std::to_string(i));
+      }
+      for (int i = 1; i <= valid_instructions.size(); i++) {
         renderer.renderWord(
-            6, i, PickerRenderer::insToString(instructions[i - 1].type));
+            6, i, PickerRenderer::insToString(valid_instructions[i - 1]));
       }
       {
         InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
@@ -127,8 +129,8 @@ void PickerState::switchTab(bool left) {
       return;
     }
     int cur = cursor_positions[1] - 1;
-    if (current_tab < 2 && instructions[cur].type != InstructionType::INBOX &&
-        instructions[cur].type != InstructionType::OUTBOX) {
+    if (current_tab < 2 && valid_instructions[cur] != InstructionType::INBOX &&
+        valid_instructions[cur] != InstructionType::OUTBOX) {
       current_tab++;
       cursor_positions[current_tab] = 1;
     } else {
@@ -160,7 +162,7 @@ void PickerState::addCommand(bool above, const int max_ins) {
 
 // Delete a command
 void PickerState::removeCommand() {
-  if (current_tab > 0) return;
+  if (current_tab > 0 || command_length == 1) return;
   int cur = cursor_positions[0];
   command_length--;
   instructions.erase(instructions.begin() + cur - 1);
@@ -173,6 +175,7 @@ void PickerState::removeCommand() {
       if (instructions[i].param == 0) instructions[i].param++;
     }
   }
+  if (cursor_positions[0] > 1) cursor_positions[0]--;
 }
 
 // Save the current command
