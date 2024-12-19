@@ -42,7 +42,8 @@ Keyboard controls a virtual cursor over buttons and `instructions`, and triggers
 - [x] UI: display interactive picker
 - [ ] UI: display result
 - [ ] UI: read i18n text file and show in picker's hint
-- [ ] Allow quit in picker & run-time
+- [x] Allow quit in picker
+- [ ] Allow quit and modifying speed in run-time
 - [ ] UI: main level-selection menu
 - [ ] FileIO: store play data and decide if the next level is unlocked
 - [ ] UI: (optional) pause menu
