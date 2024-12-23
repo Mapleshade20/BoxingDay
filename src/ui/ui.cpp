@@ -7,6 +7,7 @@
 #include "instances.hpp"
 #include "libtui.hpp"
 #include "picker.hpp"
+#include "renderer.hpp"
 
 void GameUI::setDelay(int ms) { delay_ms = ms; }
 
@@ -19,24 +20,76 @@ int GameUI::menu() {
   return level;
 }
 
-void GameUI::displayError(ExecutionError error, int err_pos) {
-  std::cout << "Error on instruction " << err_pos + 1 << std::endl;
-}
-
-void GameUI::displayExecutionResult(bool success) {
+// Return true if player retrys, false if player exits
+bool GameUI::displayExecutionResult(bool success, ExecutionError error,
+                                    int err_pos) {
+  Renderer renderer(17, 10);
+  renderer.setShape({"***********************************",
+                     "*                                 *",
+                     "*                                 *",
+                     "*                                 *",
+                     "*                                 *",
+                     "***********************************"});
+  renderer.renderShape(0, 0);
   if (success) {
-    std::cout << "Success" << std::endl;
+    renderer.renderWord(9, 2, "Level complete!", YELLOW);
+    renderer.renderWord(6, 4, "Press any key to return");
+    while (true) {
+      usleep(1000000 / 60);
+      if (kbhit()) {
+        return false;
+      }
+    }
   } else {
-    std::cout << "Fail" << std::endl;
+    std::string error_message;
+    switch (error) {
+      case ExecutionError::NONE:
+        error_message = "Failed, but don't give up~";
+        break;
+      default:
+        error_message = "Error on instruction " + std::to_string(err_pos + 1);
+        break;
+    }
+    renderer.renderWord(4, 2, error_message, YELLOW);
+    renderer.renderWord(2, 4, "'r' to retry; any key to return");
+    renderer.renderWord(2, 3, "'h' to see hint");
+    while (true) {
+      usleep(1000000 / 60);
+      if (kbhit()) {
+        char input;
+        std::cin >> input;
+        switch (input) {
+          case 'r':
+            return true;
+          case 'h': {
+            std::string hint = "Desired: ";
+            for (int n : engine->level_data.expected_outbox) {
+              hint += std::to_string(n) + " ";
+            }
+            renderer.clearArea(2, 3, 20, 1);
+            renderer.renderWord(2, 3, hint);
+            break;
+          }
+          default:
+            return false;
+        }
+      }
+    }
   }
 }
 
 void GameUI::run() {
   setDelay(1000);
+  bool retry = false;
+  int level = 1;
   while (true) {
-    int level = menu();
-    if (level < 1) {  // Exit signal
-      break;
+    if (!retry) {
+      level = menu();
+      if (level < 1) {  // Exit signal
+        break;
+      }
+    } else {
+      retry = false;
     }
 
     // Create new engine for each level
@@ -52,7 +105,7 @@ void GameUI::run() {
     RegRenderer reg_renderer(11, 7, engine->getState(), 1.0);
     TilesRenderer tiles_renderer(19, 13, engine->getState());
     SequenceRenderer sequence_renderer(3, 8);
-    canvas_renderer.setup();
+    canvas_renderer.setup();  // have a `clearConsole()` inside
     reg_renderer.setup(engine->getState());
     tiles_renderer.setup(engine->getState());
     sequence_renderer.setup(engine->getState());
@@ -73,8 +126,9 @@ void GameUI::run() {
     while (true) {
       try {
         bool continues = engine->executeNextInstruction();
+
         const GameState state = engine->getState();
-        picker.refresh(state);
+        picker.refresh(state, engine->getSteps());
         reg_renderer.refresh(state);
         tiles_renderer.refresh(state);
         sequence_renderer.refresh(state);
@@ -83,19 +137,19 @@ void GameUI::run() {
 
         if (!continues) {
           usleep(delay_ms * 1000);
-          bool result = engine->validateOutput();
+          retry = displayExecutionResult(engine->validateOutput(),
+                                         ExecutionError::NONE, 0);
           showCursor();
           resetTerminal();
           clearConsole();
-          displayExecutionResult(result);
           break;
         }
       } catch (ExecutionError error) {
         usleep(delay_ms * 1000);
+        retry = displayExecutionResult(false, error, engine->getState().cursor);
         showCursor();
         resetTerminal();
         clearConsole();
-        displayError(error, engine->getState().cursor);
         break;
       }
     }

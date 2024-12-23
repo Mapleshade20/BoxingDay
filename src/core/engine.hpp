@@ -7,6 +7,7 @@ private:
   GameState state;
   Program program;
   InstructionExecutor executor;
+  int steps;
 
 public:
   const LevelData &level_data;
@@ -16,4 +17,5 @@ public:
   const GameState &getState() const;
   bool executeNextInstruction();  // Returns false when program ends
   bool validateOutput() const;
+  int getSteps() const;
 };

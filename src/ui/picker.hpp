@@ -63,7 +63,7 @@ public:
   void renderParameters(PickerState &state);
 
   // Render operations
-  void renderOperations(int cursor_position);
+  void renderOperations(int cursor_position, int steps);
 
   // Render initial operating instructions
   void renderInstructions(std::vector<std::string> infomation);
@@ -82,5 +82,5 @@ public:
   Program interact();
 
   // Update the picker in run-time. Once per call.
-  void refresh(const GameState &state);
+  void refresh(const GameState &state, int steps);
 };

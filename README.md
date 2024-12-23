@@ -40,7 +40,7 @@ Keyboard controls a virtual cursor over buttons and `instructions`, and triggers
 - [x] Finalize version alpha in accordance with OJ
 - [x] UI: display run-time
 - [x] UI: display interactive picker
-- [ ] UI: display result
+- [x] UI: display result
 - [ ] UI: read i18n text file and show in picker's hint
 - [x] Allow quit in picker
 - [ ] Allow quit and modifying speed in run-time

@@ -7,9 +7,7 @@ private:
   GameEngine *engine;  // Make GameEngine a pointer member
   int delay_ms;
 
-  // void displayState(const GameState &state);
-  void displayError(ExecutionError error, int err_pos);
-  void displayExecutionResult(bool success);
+  bool displayExecutionResult(bool success, ExecutionError error, int err_pos);
   // Program readProgramFromUser();
 
 public:

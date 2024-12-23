@@ -96,9 +96,10 @@ void PickerRenderer::renderParameters(PickerState &state) {
       break;
   }
 }
-void PickerRenderer::renderOperations(int cursor_position) {
+void PickerRenderer::renderOperations(int cursor_position, int steps) {
   renderer.clearArea(0, 0, 1, MAX_INS + 1);
-  renderer.renderWord(0, cursor_position, ">");
+  renderer.renderWord(3, 0, "Steps Taken: " + std::to_string(steps), GREEN);
+  renderer.renderWord(0, cursor_position, ">", BLUE);
 }
 // Constructor for PickerState
 PickerState::PickerState(std::vector<InstructionType> valid_instructions,
@@ -233,8 +234,8 @@ PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
 }
 
 // Update the picker in run-time. Once per call.
-void PickerInteract::refresh(const GameState &state) {
-  renderer.renderOperations(state.cursor);
+void PickerInteract::refresh(const GameState &state, int steps) {
+  renderer.renderOperations(state.cursor, steps);
 }
 
 // Interact with the picker. Have a while loop embedded.
