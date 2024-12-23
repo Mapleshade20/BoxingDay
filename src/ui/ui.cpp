@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+#include <cstdio>
 #include <iostream>
 
 #include "instances.hpp"
@@ -9,7 +10,7 @@
 #include "picker.hpp"
 #include "renderer.hpp"
 
-void GameUI::setDelay(int ms) { delay_ms = ms; }
+void GameUI::setDelay(int ms) { this->delay_ms = ms; }
 
 int GameUI::menu() {
   // NOTE: Need preview & select level UI
@@ -18,6 +19,19 @@ int GameUI::menu() {
   std::cin >> level;
 
   return level;
+}
+
+bool GameUI::runtimeInteract() {
+  if (kbhit()) {
+    char input = getchar();
+    switch (input) {
+      case 'Q':
+        return true;
+      default:
+        break;
+    }
+  }
+  return false;
 }
 
 // Return true if player retrys, false if player exits
@@ -109,7 +123,7 @@ void GameUI::run() {
     reg_renderer.setup(engine->getState());
     tiles_renderer.setup(engine->getState());
     sequence_renderer.setup(engine->getState());
-    usleep(1500000);
+    usleep(1000000);
 
     // Start phase 1: picker
     PickerInteract picker(79, 7, engine->level_data);
@@ -125,6 +139,8 @@ void GameUI::run() {
     // Start phase 2: execution
     while (true) {
       try {
+        bool quit = runtimeInteract();
+        if (quit) break;
         bool continues = engine->executeNextInstruction();
 
         const GameState state = engine->getState();
@@ -133,25 +149,23 @@ void GameUI::run() {
         tiles_renderer.refresh(state);
         sequence_renderer.refresh(state);
 
-        usleep(delay_ms * 1000);
+        usleep(this->delay_ms * 1000);
 
         if (!continues) {
-          usleep(delay_ms * 1000);
+          usleep(this->delay_ms * 1000);
           retry = displayExecutionResult(engine->validateOutput(),
                                          ExecutionError::NONE, 0);
-          showCursor();
-          resetTerminal();
-          clearConsole();
           break;
         }
       } catch (ExecutionError error) {
-        usleep(delay_ms * 1000);
+        usleep(this->delay_ms * 1000);
         retry = displayExecutionResult(false, error, engine->getState().cursor);
-        showCursor();
-        resetTerminal();
-        clearConsole();
         break;
       }
     }
+
+    showCursor();
+    resetTerminal();
+    clearConsole();
   }
 }
