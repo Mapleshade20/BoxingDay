@@ -6,12 +6,14 @@
 
 #include <cstdio>
 #include <iostream>
+#include <limits>
 
 #include "../fileIO/playerdata.hpp"
 #include "instances.hpp"
 #include "libtui.hpp"
 #include "picker.hpp"
 #include "renderer.hpp"
+
 
 void GameUI::setDelay(int ms) { this->delay_ms = ms; }
 
