@@ -230,9 +230,9 @@ bool PickerState::areAllParamsComplete() {
 PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
     : state(l.available_instructions, l.available_tiles),
       renderer(start_x, start_y) {
-  renderer.renderInstructions(
-      {"Hotkeys:", "h: left, l: right", "j: down, k: up", "o: insert below",
-       "O: insert above", "d: delete", "R: run, Q: quit"});
+  renderer.renderInstructions({"h: left, l: right", "j: down, k: up",
+                               "o: insert below", "O: insert above",
+                               "d: delete", "R: run, Q: quit"});
 }
 
 // Update the picker in run-time. Once per call.
