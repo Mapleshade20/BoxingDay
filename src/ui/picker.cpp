@@ -230,7 +230,7 @@ bool PickerState::areAllParamsComplete() {
 PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
     : state(l.available_instructions, l.available_tiles),
       renderer(start_x, start_y) {
-  renderer.renderInstructions({"h: left, l: right", "j: down, k: up",
+  renderer.renderInstructions({"h: back, l: enter", "j: down, k: up",
                                "o: insert below", "O: insert above",
                                "d: delete", "R: run, Q: quit"});
 }
