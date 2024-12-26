@@ -107,9 +107,9 @@ PickerState::PickerState(std::vector<InstructionType> valid_instructions,
   this->valid_instructions = valid_instructions;  // GameUI
   this->total_tiles = total_tiles;
 }
-void PickerRenderer::renderInstructions(std::vector<std::string> infomation) {
-  for (int i = 0; i < infomation.size(); i++) {
-    renderer.renderWord(0, i - 6, infomation[i]);
+void PickerRenderer::renderInstructions(std::vector<std::string> information) {
+  for (int i = 0; i < information.size(); i++) {
+    renderer.renderWord(0, i - 6, information[i]);
   }
 }
 
@@ -230,7 +230,9 @@ bool PickerState::areAllParamsComplete() {
 PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
     : state(l.available_instructions, l.available_tiles),
       renderer(start_x, start_y) {
-  renderer.renderInstructions({"**To be replaced**"});
+  renderer.renderInstructions(
+      {"Hotkeys:", "h: left, l: right", "j: down, k: up", "o: insert below",
+       "O: insert above", "d: delete", "R: run, Q: quit"});
 }
 
 // Update the picker in run-time. Once per call.

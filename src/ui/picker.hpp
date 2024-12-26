@@ -51,7 +51,7 @@ private:
   Renderer renderer;
 
 public:
-  const int MAX_INS = 35;
+  const int MAX_INS = 30;
 
   // Constructor for PickerRenderer
   PickerRenderer(int start_x, int start_y);

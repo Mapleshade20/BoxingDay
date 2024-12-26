@@ -39,3 +39,4 @@ build/
 
 # Editor
 .vscode
+.release_time
