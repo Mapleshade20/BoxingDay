@@ -1,6 +1,7 @@
 #include "ui.hpp"
 
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <cstdio>
@@ -24,10 +25,28 @@ void GameUI::checkTerminalSize() {
   }
 }
 
-int GameUI::menu() {
-  // NOTE: Need preview & select level UI
+void GameUI::checkAndDownloadLevels() {
+  std::string levels_dir =
+      std::string(getenv("HOME")) + "/Documents/BoxingDay/levels";
+  struct stat info;
 
-  std::string input;
+  if (stat(levels_dir.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR)) {
+    std::cout
+        << "Levels directory does not exist. Downloading from repository..."
+        << std::endl;
+    std::string command =
+        "git clone https://github.com/tnpschy24/BoxingDayData.git " +
+        levels_dir;
+    if (system(command.c_str()) != 0) {
+      std::cerr << "Failed to clone the repository. Please check your internet "
+                   "connection and try again."
+                << std::endl;
+      exit(1);
+    }
+  }
+}
+
+int GameUI::menu() {
   int level = 0;
   DataManager data_manager;
   auto levels = data_manager.readLevelData();
@@ -37,12 +56,19 @@ int GameUI::menu() {
               << " instructions, " << l.min_steps << " steps)" << std::endl;
   }
   std::cout << "Level " << levels.size() + 1 << std::endl;
-  std::cout << "\nEnter level number or 0 to exit: ";
-  std::cin >> input;
-  try {
-    level = std::stoi(input);
-  } catch (std::exception &e) {
-    level = 0;
+
+  while (true) {
+    std::cout << "\nEnter level number or 0 to exit: ";
+    std::cin >> level;
+
+    if (std::cin.fail()) {
+      std::cin.clear();  // clear the error flag
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(),
+                      '\n');  // discard invalid input
+      std::cout << "Invalid input. Please enter a number." << std::endl;
+    } else {
+      break;  // valid input
+    }
   }
 
   return level;
@@ -121,6 +147,7 @@ bool GameUI::displayExecutionResult(bool success, ExecutionError error,
 
 void GameUI::run() {
   checkTerminalSize();
+  checkAndDownloadLevels();
   setDelay(1000);
   bool retry = false;
   int level;

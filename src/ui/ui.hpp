@@ -18,6 +18,8 @@ private:
 
   void checkTerminalSize();
 
+  void checkAndDownloadLevels();
+
 public:
   GameUI() : engine(nullptr), delay_ms(0) {}
   ~GameUI() { delete engine; }
