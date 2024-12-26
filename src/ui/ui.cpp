@@ -1,5 +1,6 @@
 #include "ui.hpp"
 
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include <cstdio>
@@ -13,18 +14,30 @@
 
 void GameUI::setDelay(int ms) { this->delay_ms = ms; }
 
+void GameUI::checkTerminalSize() {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  if (w.ws_col < 100 || w.ws_row < 37) {
+    std::cout << "Terminal size is too small. Please resize to at least 100x37."
+              << std::endl;
+    exit(1);
+  }
+}
+
 int GameUI::menu() {
   // NOTE: Need preview & select level UI
 
   std::string input;
   int level = 0;
-  std::cout << "Welcome to Boxing Day!" << std::endl;
-  std::cout << "In this game, you will be asked to write a program to sort "
-               "inbox numbers into outbox following a given pattern."
-            << std::endl;
   DataManager data_manager;
-  auto levels = data_manager.readPassedLevels();
-  std::cout << "Enter level number or 0 to exit: ";
+  auto levels = data_manager.readLevelData();
+  std::cout << "Unlocked levels: " << std::endl;
+  for (auto l : levels) {
+    std::cout << "Level " << l.level << " (record: " << l.min_instructions
+              << " instructions, " << l.min_steps << " steps)" << std::endl;
+  }
+  std::cout << "Level " << levels.size() + 1 << std::endl;
+  std::cout << "\nEnter level number or 0 to exit: ";
   std::cin >> input;
   try {
     level = std::stoi(input);
@@ -107,9 +120,14 @@ bool GameUI::displayExecutionResult(bool success, ExecutionError error,
 }
 
 void GameUI::run() {
+  checkTerminalSize();
   setDelay(1000);
   bool retry = false;
-  int level = 1;
+  int level;
+  std::cout << "Welcome to Boxing Day!" << std::endl;
+  std::cout << "In this game, you will be asked to write a program to sort "
+               "inbox numbers into outbox following a given pattern.\n"
+            << std::endl;
   while (true) {
     if (!retry) {
       level = menu();

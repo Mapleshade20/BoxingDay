@@ -16,6 +16,8 @@ private:
   // Read keyboard input once. Return true if player quits
   bool runtimeInteract();
 
+  void checkTerminalSize();
+
 public:
   GameUI() : engine(nullptr), delay_ms(0) {}
   ~GameUI() { delete engine; }
