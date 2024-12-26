@@ -1,25 +1,13 @@
+#include "playerdata.hpp"
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <vector>
 
-struct PlayerData {
-  int level;
-  int min_instructions;
-  int min_steps;
-};
-
-class DataManager {
-private:
-  std::string homeDirectory = std::getenv("HOME");
-  std::string filename = homeDirectory + "/Documents/BoxingDay/gameplay.dat";
-
-public:
-  int readPassedLevels();
-  std::vector<PlayerData> readLevelData(int level);
-  void writeData(int level, int instructions, int steps);
-};
+DataManager::DataManager() {
+  this->home_dir = std::getenv("HOME");
+  this->filename = home_dir + "/Documents/BoxingDay/gameplay.dat";
+}
 
 int DataManager::readPassedLevels() {
   std::ifstream file(filename, std::ios::binary);

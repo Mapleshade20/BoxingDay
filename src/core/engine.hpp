@@ -18,4 +18,5 @@ public:
   bool executeNextInstruction();  // Returns false when program ends
   bool validateOutput() const;
   int getSteps() const;
+  int getProgramLength() const;
 };

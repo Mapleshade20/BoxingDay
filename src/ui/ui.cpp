@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <iostream>
 
+#include "../fileIO/playerdata.hpp"
 #include "instances.hpp"
 #include "libtui.hpp"
 #include "picker.hpp"
@@ -17,6 +18,12 @@ int GameUI::menu() {
 
   std::string input;
   int level = 0;
+  std::cout << "Welcome to Boxing Day!" << std::endl;
+  std::cout << "In this game, you will be asked to write a program to sort "
+               "inbox numbers into outbox following a given pattern."
+            << std::endl;
+  DataManager data_manager;
+  auto levels = data_manager.readPassedLevels();
   std::cout << "Enter level number or 0 to exit: ";
   std::cin >> input;
   try {
@@ -165,8 +172,13 @@ void GameUI::run() {
 
         if (!continues) {
           usleep(this->delay_ms * 1000);
-          retry = displayExecutionResult(engine->validateOutput(),
-                                         ExecutionError::NONE, 0);
+          bool success = engine->validateOutput();
+          if (success) {
+            DataManager data_manager;
+            data_manager.writeData(level, engine->getProgramLength(),
+                                   engine->getSteps());
+          }
+          retry = displayExecutionResult(success, ExecutionError::NONE, 0);
           break;
         }
       } catch (ExecutionError error) {

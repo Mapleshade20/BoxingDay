@@ -32,3 +32,5 @@ bool GameEngine::executeNextInstruction() {
 }
 
 int GameEngine::getSteps() const { return steps; }
+
+int GameEngine::getProgramLength() const { return program.size(); }
