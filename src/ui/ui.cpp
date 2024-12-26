@@ -14,9 +14,16 @@ void GameUI::setDelay(int ms) { this->delay_ms = ms; }
 
 int GameUI::menu() {
   // NOTE: Need preview & select level UI
-  int level = 1;
-  std::cout << "Enter level number (1-3) or 0 to exit: ";
-  std::cin >> level;
+
+  std::string input;
+  int level = 0;
+  std::cout << "Enter level number or 0 to exit: ";
+  std::cin >> input;
+  try {
+    level = std::stoi(input);
+  } catch (std::exception &e) {
+    level = 0;
+  }
 
   return level;
 }
@@ -107,8 +114,13 @@ void GameUI::run() {
     }
 
     // Create new engine for each level
-    delete engine;
-    const LevelData level_data = LevelData::loadLevel(level);
+    LevelData level_data;
+    try {
+      level_data = LevelData::loadLevel(level);
+    } catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
+      continue;
+    }
     engine = new GameEngine(level_data);
 
     // Set up ui components
@@ -164,6 +176,7 @@ void GameUI::run() {
       }
     }
 
+    delete engine;
     showCursor();
     resetTerminal();
     clearConsole();

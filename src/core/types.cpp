@@ -19,35 +19,26 @@ Tile::Tile() {
   this->is_empty = true;
 }
 
-Instruction Instruction::fromString(const std::string &name, int param) {
-  Instruction ans;
-  if (name == "error") {
-    ans.type = InstructionType::ERROR;
-    ans.param = -2;
-    return ans;
-  }
-  ans.param = param;
-  if (name == "inbox" && param == -1)
-    ans.type = InstructionType::INBOX;
-  else if (name == "outbox" && param == -1)
-    ans.type = InstructionType::OUTBOX;
-  else if (name == "add" && param != -1)
-    ans.type = InstructionType::ADD;
-  else if (name == "sub" && param != -1)
-    ans.type = InstructionType::SUB;
-  else if (name == "copyto" && param != -1)
-    ans.type = InstructionType::COPYTO;
-  else if (name == "copyfrom" && param != -1)
-    ans.type = InstructionType::COPYFROM;
-  else if (name == "jump" && param != -1)
-    ans.type = InstructionType::JUMP;
-  else if (name == "jumpifzero" && param != -1)
-    ans.type = InstructionType::JUMPIFZERO;
+InstructionType Instruction::fromString(std::string &name) {
+  if (name == "inbox")
+    return InstructionType::INBOX;
+  else if (name == "outbox")
+    return InstructionType::OUTBOX;
+  else if (name == "add")
+    return InstructionType::ADD;
+  else if (name == "sub")
+    return InstructionType::SUB;
+  else if (name == "copyto")
+    return InstructionType::COPYTO;
+  else if (name == "copyfrom")
+    return InstructionType::COPYFROM;
+  else if (name == "jump")
+    return InstructionType::JUMP;
+  else if (name == "jumpifzero")
+    return InstructionType::JUMPIFZERO;
   else {
-    ans.type = InstructionType::ERROR;
-    ans.param = -2;
+    return InstructionType::ERROR;
   }
-  return ans;
 }
 
 void Program::setInstructions(std::vector<Instruction> instructions) {

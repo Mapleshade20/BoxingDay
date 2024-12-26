@@ -48,7 +48,7 @@ public:
   InstructionType type;
   int param;
 
-  static Instruction fromString(const std::string &name, int param);
+  static InstructionType fromString(std::string &name);
 };
 
 class Program {
