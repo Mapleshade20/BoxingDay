@@ -8,7 +8,7 @@ DataManager::DataManager() {
   this->home_dir = std::getenv("HOME");
   this->filename = home_dir + "/Documents/BoxingDay/gameplay.dat";
 }
-
+/*
 int DataManager::readPassedLevels() {
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
@@ -20,8 +20,8 @@ int DataManager::readPassedLevels() {
     return 0;
   }
 }
-
-std::vector<PlayerData> DataManager::readLevelData(int level) {
+*/
+std::vector<PlayerData> DataManager::readLevelData() {
   std::vector<PlayerData> data;
   std::ifstream file(filename, std::ios::binary);
   if (file.is_open()) {
@@ -32,18 +32,18 @@ std::vector<PlayerData> DataManager::readLevelData(int level) {
       file.read(reinterpret_cast<char*>(&data[i]), sizeof(PlayerData));
     }
     file.close();
-    if (size < level) {
-      data.push_back({level, -1, -1});
-    }
     return data;
   } else {
-    return {{level, -1, -1}};
+    return {};
   }
 }
 
 void DataManager::writeData(int level, int instructions, int steps) {
   std::vector<PlayerData> data;
-  data = readLevelData(level);
+  data = readLevelData();
+  if (data.size() < level) {
+    data.push_back({level, -1, -1});
+  }
   if (data[level - 1].min_instructions == -1) {
     data[level - 1] = {level, instructions, steps};
   } else {

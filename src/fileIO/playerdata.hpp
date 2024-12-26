@@ -14,7 +14,7 @@ private:
 
 public:
   DataManager();
-  int readPassedLevels();
-  std::vector<PlayerData> readLevelData(int level);
+  // int readPassedLevels();
+  std::vector<PlayerData> readLevelData();
   void writeData(int level, int instructions, int steps);
 };
