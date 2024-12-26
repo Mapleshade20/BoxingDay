@@ -1,0 +1,13 @@
+[info]
+level = 3
+title = "Are We Equal?"
+desc = "For each pair of two, return: their shared value if they are equal, otherwise discard both."
+inbox_example = "1, 2, 2, 3, 3, 3, 4, 4"
+outbox_example = "3, 4"
+
+[game]
+outbox = [7, -3]
+inbox = [6, 2, 7, 7, -9, 3, -3, -3]
+available_instructions = ["inbox", "outbox", "add", "sub", "copyto", "copyfrom", "jump", "jumpifzero"]
+available_tiles = 3
+
