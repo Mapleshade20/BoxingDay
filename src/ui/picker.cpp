@@ -82,7 +82,7 @@ void PickerRenderer::renderParameters(PickerState &state) {
         InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
         if (tmp == InstructionType::JUMP ||
             tmp == InstructionType::JUMPIFZERO) {
-          for (int i = 1; i <= command_length + 1; i++) {
+          for (int i = 1; i <= command_length; i++) {
             renderer.renderWord(19, i, std::to_string(i));
           }
         } else {
@@ -212,7 +212,7 @@ int PickerState::getCommandLength() {
   if (current_tab == 2) {
     InstructionType tmp = valid_instructions[cursor_positions[1] - 1];
     if (tmp == InstructionType::JUMP || tmp == InstructionType::JUMPIFZERO)
-      return command_length + 1;
+      return command_length;
     return total_tiles;
   }
   return valid_instructions.size();
