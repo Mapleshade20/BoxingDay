@@ -47,7 +47,7 @@ void GameUI::checkAndDownloadLevels() {
 }
 
 int GameUI::menu() {
-  int level = 0;
+  int level_num = 0;
   DataManager data_manager;
   auto levels = data_manager.readLevelData();
   std::cout << "Unlocked levels: " << std::endl;
@@ -59,9 +59,9 @@ int GameUI::menu() {
 
   while (true) {
     std::cout << "\nEnter level number or 0 to exit: ";
-    std::cin >> level;
+    std::cin >> level_num;
 
-    if (std::cin.fail()) {
+    if (std::cin.fail() || level_num > levels.size() + 1) {
       std::cin.clear();  // clear the error flag
       std::cin.ignore(std::numeric_limits<std::streamsize>::max(),
                       '\n');  // discard invalid input
@@ -71,7 +71,7 @@ int GameUI::menu() {
     }
   }
 
-  return level;
+  return level_num;
 }
 
 bool GameUI::runtimeInteract() {
@@ -104,6 +104,8 @@ bool GameUI::displayExecutionResult(bool success, ExecutionError error,
     while (true) {
       usleep(1000000 / 60);
       if (kbhit()) {
+        char wasted;
+        std::cin >> wasted;
         return false;
       }
     }
