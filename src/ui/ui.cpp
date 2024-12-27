@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 
@@ -13,7 +14,6 @@
 #include "libtui.hpp"
 #include "picker.hpp"
 #include "renderer.hpp"
-
 
 void GameUI::setDelay(int ms) { this->delay_ms = ms; }
 
@@ -163,11 +163,10 @@ void GameUI::run() {
     if (!retry) {
       level = menu();
       if (level < 1) {  // Exit signal
-        break;
+        exit(0);
       }
-    } else {
-      retry = false;
     }
+    retry = false;
 
     // Create new engine for each level
     LevelData level_data;
@@ -177,7 +176,7 @@ void GameUI::run() {
       std::cout << e.what() << std::endl;
       continue;
     }
-    engine = new GameEngine(level_data);
+    this->engine = new GameEngine(level_data);
 
     // Set up ui components
     setNonBlockingInput();
@@ -237,7 +236,7 @@ void GameUI::run() {
       }
     }
 
-    delete engine;
+    delete this->engine;
     showCursor();
     resetTerminal();
     clearConsole();
