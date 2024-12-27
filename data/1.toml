@@ -1,16 +1,15 @@
 # This is the game configuration file for level 1
 # It consists of a inbox number sequence, a desired outbox number sequence, level title, level number, level description, available instructions, and available tile amount.
 
+[info]
 level = 1
 title = "One By One"
 desc = "Put each number in the outbox, one by one."
+inbox_example = "1, 2, 3, 4, 5"
+outbox_example = "1, 2, 3, 4, 5"
 
 [game]
-outbox_size = 2
 outbox = [1, 2]
-# max_steps = 100
-# max_instructions = 100
-inbox_size = 2
 inbox = [1, 2]
 available_instructions = ["inbox", "outbox"]
 available_tiles = 0

@@ -1,34 +1,48 @@
 #include "types.hpp"
 
-Instruction Instruction::fromString(const std::string &name, int param) {
-  Instruction ans;
-  if (name == "error") {
-    ans.type = InstructionType::ERROR;
-    ans.param = -2;
-    return ans;
-  }
-  ans.param = param;
-  if (name == "inbox" && param == -1)
-    ans.type = InstructionType::INBOX;
-  else if (name == "outbox" && param == -1)
-    ans.type = InstructionType::OUTBOX;
-  else if (name == "add" && param != -1)
-    ans.type = InstructionType::ADD;
-  else if (name == "sub" && param != -1)
-    ans.type = InstructionType::SUB;
-  else if (name == "copyto" && param != -1)
-    ans.type = InstructionType::COPYTO;
-  else if (name == "copyfrom" && param != -1)
-    ans.type = InstructionType::COPYFROM;
-  else if (name == "jump" && param != -1)
-    ans.type = InstructionType::JUMP;
-  else if (name == "jumpifzero" && param != -1)
-    ans.type = InstructionType::JUMPIFZERO;
+std::string Register::getContent() const {
+  return (this->is_empty ? "" : std::to_string(this->hand));
+}
+
+Register::Register() {
+  this->current_tile = -1;
+  this->hand = 0;
+  this->is_empty = true;
+}
+
+std::string Tile::getContent() const {
+  return (this->is_empty ? "" : std::to_string(this->value));
+}
+
+Tile::Tile() {
+  this->value = 0;
+  this->is_empty = true;
+}
+
+InstructionType Instruction::fromString(std::string &name) {
+  if (name == "inbox")
+    return InstructionType::INBOX;
+  else if (name == "outbox")
+    return InstructionType::OUTBOX;
+  else if (name == "add")
+    return InstructionType::ADD;
+  else if (name == "sub")
+    return InstructionType::SUB;
+  else if (name == "copyto")
+    return InstructionType::COPYTO;
+  else if (name == "copyfrom")
+    return InstructionType::COPYFROM;
+  else if (name == "jump")
+    return InstructionType::JUMP;
+  else if (name == "jumpifzero")
+    return InstructionType::JUMPIFZERO;
   else {
-    ans.type = InstructionType::ERROR;
-    ans.param = -2;
+    return InstructionType::ERROR;
   }
-  return ans;
+}
+
+void Program::setInstructions(std::vector<Instruction> instructions) {
+  this->instructions = instructions;
 }
 
 void Program::addInstruction(const Instruction &inst) {
@@ -38,4 +52,4 @@ void Program::clear() { instructions.clear(); }
 const Instruction &Program::at(int index) const {
   return instructions.at(index);
 }
-const int Program::size() const { return instructions.size(); }
+int Program::size() const { return instructions.size(); }

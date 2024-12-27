@@ -26,15 +26,21 @@ enum class ExecutionError {
   OUT_OF_BOUNDS,
 };
 
-struct Register {
+class Register {
+public:
   int current_tile;
   int hand;
   bool is_empty;
+  std::string getContent() const;
+  Register();
 };
 
-struct Tile {
+class Tile {
+public:
   int value;
   bool is_empty;
+  std::string getContent() const;
+  Tile();
 };
 
 class Instruction {
@@ -42,7 +48,7 @@ public:
   InstructionType type;
   int param;
 
-  static Instruction fromString(const std::string &name, int param);
+  static InstructionType fromString(std::string &name);
 };
 
 class Program {
@@ -51,7 +57,8 @@ private:
 
 public:
   void addInstruction(const Instruction &inst);
+  void setInstructions(std::vector<Instruction> instructions);
   void clear();
   const Instruction &at(int index) const;
-  const int size() const;
+  int size() const;
 };

@@ -1,3 +1,8 @@
+# Special dirs
+bin/
+build/
+*.dSYM/
+
 # Prerequisites
 *.d
 
@@ -34,3 +39,4 @@
 
 # Editor
 .vscode
+.release_time
