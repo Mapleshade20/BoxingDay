@@ -36,6 +36,7 @@ build/
 *.out
 *.app
 *.bin
+boxingday
 
 # Editor
 .vscode
