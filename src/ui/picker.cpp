@@ -2,7 +2,10 @@
 
 #include <unistd.h>
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include "libtui.hpp"
 
@@ -206,6 +209,58 @@ void PickerState::saveCurrentCommand() {
   instructions[cur].param = cursor_positions[2] - 1;
 }
 
+void PickerState::readFromFile() {
+  if (command_length > 1) return;  // read file when command_length==1 only
+  std::string commands_dir =
+      std::string(getenv("HOME")) + "/Documents/BoxingDay/input.txt";
+
+  std::ifstream fin(commands_dir);
+  if (!fin.is_open()) return;
+  std::string line;
+  bool cleared = false;
+  while (std::getline(fin, line)) {
+    if (!cleared) {
+      instructions.clear();
+      is_param_complete.clear();
+      cleared = true;
+    }
+    std::stringstream stream(line);
+    std::string param_str;
+    stream >> param_str;
+    InstructionType i = Instruction::fromString(param_str);
+    bool is_valid = false;
+    for (int j = 0; j < valid_instructions.size(); j++) {
+      if (i == valid_instructions[j]) {
+        is_valid = true;
+        break;
+      }
+    }
+    if (!is_valid) {
+      i = InstructionType::ERROR;
+    }
+    if (i == InstructionType::ERROR) {
+      instructions.push_back({InstructionType::ERROR, -1});
+      is_param_complete.push_back(false);
+      continue;
+    }
+    if (i == InstructionType::INBOX || i == InstructionType::OUTBOX) {
+      instructions.push_back({i, -1});
+      is_param_complete.push_back(true);
+    } else {
+      int param;
+      if (stream >> param) {
+        instructions.push_back({i, param});
+        is_param_complete.push_back(true);
+      } else {
+        instructions.push_back({InstructionType::ERROR, -1});
+        is_param_complete.push_back(false);
+      }
+    }
+  }
+  command_length = instructions.size();
+  current_tab = 0;
+}
+
 // Get the length of the current command
 int PickerState::getCommandLength() {
   if (current_tab == 0) return command_length;
@@ -274,6 +329,9 @@ Program PickerInteract::interact() {
           break;
         case 'R':
           if (state.areAllParamsComplete()) is_running = false;
+          break;
+        case 'F':
+          state.readFromFile();
           break;
         case 'Q':
           throw std::runtime_error("User quit");

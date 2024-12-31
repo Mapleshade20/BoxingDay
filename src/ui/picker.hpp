@@ -39,6 +39,9 @@ public:
   // Save the current command
   void saveCurrentCommand();
 
+  // Read commands from file
+  void readFromFile();
+
   // Get the length of the current command
   int getCommandLength();
 
