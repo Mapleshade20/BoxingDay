@@ -287,7 +287,7 @@ PickerInteract::PickerInteract(int start_x, int start_y, const LevelData &l)
       renderer(start_x, start_y) {
   renderer.renderInstructions({"h: back, l: enter", "j: down, k: up",
                                "o: insert below", "O: insert above",
-                               "d: delete", "R: run, Q: quit"});
+                               "d: delete, F: file", "R: run, Q: quit"});
 }
 
 // Update the picker in run-time. Once per call.
